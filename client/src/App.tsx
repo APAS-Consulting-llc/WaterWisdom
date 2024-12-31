@@ -1,7 +1,5 @@
 import { Switch, Route } from "wouter";
-import { QueryClientProvider } from "@tanstack/react-query";
 import { useUser } from "./hooks/use-user";
-import { queryClient } from "./lib/queryClient";
 import AuthPage from "./pages/AuthPage";
 import HomePage from "./pages/HomePage";
 import QuizPage from "./pages/QuizPage";
@@ -32,12 +30,6 @@ function App() {
 
   if (!user) {
     return <AuthPage />;
-  }
-
-  // If user tries to access admin route without admin role, redirect them to home
-  if (window.location.pathname === '/admin' && user.role !== 'admin') {
-    window.location.href = '/';
-    return null;
   }
 
   return (

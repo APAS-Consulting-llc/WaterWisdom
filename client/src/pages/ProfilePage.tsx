@@ -131,9 +131,7 @@ export default function ProfilePage() {
                     <Progress 
                       value={(stats.correct / stats.total) * 100} 
                       className="h-2"
-                      style={{ 
-                        '--progress-background': COLORS[index % COLORS.length] 
-                      }}
+                      indicatorColor={COLORS[index % COLORS.length]}
                     />
                   </div>
                 ))}
@@ -147,7 +145,7 @@ export default function ProfilePage() {
 
           <SkillRadar 
             skills={skillsData}
-            className="bg-white rounded-lg shadow-scale"
+            className="bg-white rounded-lg shadow-lg p-4"
           />
         </div>
 
