@@ -1,80 +1,16 @@
 import AnimatedAuth from '@/components/auth/AnimatedAuth';
+import WaterEffect from '@/components/auth/WaterEffect';
 import { Card, CardContent } from '@/components/ui/card';
 import { motion } from 'framer-motion';
 import { Droplets } from 'lucide-react';
 
 export default function AuthPage() {
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-blue-50 to-indigo-50 relative overflow-hidden">
-      {/* Animated water ripples */}
-      <div className="absolute inset-0 overflow-hidden">
-        {/* Main radial gradient for water effect */}
-        <motion.div
-          className="absolute -inset-[10px] opacity-20"
-          style={{
-            background: 'radial-gradient(circle at center, rgba(59, 130, 246, 0.8) 0%, transparent 70%)',
-          }}
-          animate={{
-            scale: [1, 1.1, 1],
-          }}
-          transition={{
-            duration: 8,
-            repeat: Infinity,
-            ease: "easeInOut"
-          }}
-        />
+    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Interactive water effect background */}
+      <WaterEffect />
 
-        {/* Water droplet particles */}
-        {Array.from({ length: 20 }).map((_, i) => (
-          <motion.div
-            key={i}
-            className="absolute h-px w-px bg-blue-400 rounded-full"
-            style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-            }}
-            animate={{
-              opacity: [0, 1, 0],
-              scale: [0, 1.5, 0],
-              y: ['0vh', `${50 + Math.random() * 50}vh`],
-              x: [0, (Math.random() - 0.5) * 100],
-            }}
-            transition={{
-              duration: 3 + Math.random() * 2,
-              repeat: Infinity,
-              delay: Math.random() * 2,
-            }}
-          />
-        ))}
-
-        {/* Additional water ripples */}
-        {Array.from({ length: 3 }).map((_, i) => (
-          <motion.div
-            key={`ripple-${i}`}
-            className="absolute rounded-full border-2 border-blue-300/20"
-            style={{
-              left: '50%',
-              top: '50%',
-              width: '20vw',
-              height: '20vw',
-              marginLeft: '-10vw',
-              marginTop: '-10vw',
-            }}
-            animate={{
-              scale: [1, 4],
-              opacity: [0.5, 0],
-            }}
-            transition={{
-              duration: 4,
-              repeat: Infinity,
-              delay: i * 1.3,
-              ease: "easeOut",
-            }}
-          />
-        ))}
-      </div>
-
-      <Card className="w-full max-w-md bg-white/80 backdrop-blur-lg border-blue-100">
+      <Card className="w-full max-w-md bg-white/80 backdrop-blur-lg border-blue-100 relative z-10">
         <CardContent className="pt-8 pb-6">
           <motion.div
             className="text-center mb-8"
