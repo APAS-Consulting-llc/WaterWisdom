@@ -5,7 +5,7 @@ import session from "express-session";
 import createMemoryStore from "memorystore";
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
-import { users, insertUserSchema, type User } from "@db/schema";
+import { users, insertUserSchema, type SelectUser } from "@db/schema";
 import { db } from "@db";
 import { eq } from "drizzle-orm";
 
@@ -30,17 +30,8 @@ const crypto = {
 
 declare global {
   namespace Express {
-    interface User extends Omit<User, keyof User> {
-      id: number;
-      username: string;
-      role: 'user' | 'admin';
-      points: number;
-      streak: number;
-      phoneNumber?: string;
-      smsNotificationsEnabled: boolean;
-      preferredQuizTime: string;
-      timezone: string;
-    }
+    // Extend Express.User to match our SelectUser type
+    interface User extends SelectUser {}
   }
 }
 
@@ -142,9 +133,11 @@ export function setupAuth(app: Express) {
           username,
           password: hashedPassword,
           role: 'user',
+          points: 0,
+          streak: 0,
           preferredQuizTime: '10:00',
           timezone: 'UTC',
-          smsNotificationsEnabled: false, //added default value
+          smsNotificationsEnabled: false,
         })
         .returning();
 
@@ -155,7 +148,11 @@ export function setupAuth(app: Express) {
         }
         return res.json({
           message: "Registration successful",
-          user: { id: newUser.id, username: newUser.username },
+          user: {
+            id: newUser.id,
+            username: newUser.username,
+            role: newUser.role
+          },
         });
       });
     } catch (error) {
@@ -187,7 +184,7 @@ export function setupAuth(app: Express) {
 
         return res.json({
           message: "Login successful",
-          user: { id: user.id, username: user.username },
+          user: { id: user.id, username: user.username, role: user.role },
         });
       });
     };

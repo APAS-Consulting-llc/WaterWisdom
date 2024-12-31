@@ -17,17 +17,6 @@ export const users = pgTable("users", {
   lastNotificationSent: timestamp("last_notification_sent"),
   lastActiveAt: timestamp("last_active_at").defaultNow(),
   createdAt: timestamp("created_at").defaultNow(),
-  // Newsletter preferences
-  newsletterEnabled: boolean("newsletter_enabled").default(true),
-  newsletterFrequency: text("newsletter_frequency", { enum: ['daily', 'weekly', 'monthly'] }).default('weekly'),
-  newsletterTopics: jsonb("newsletter_topics").default(['water treatment', 'sustainability', 'management']),
-  lastNewsletterSent: timestamp("last_newsletter_sent"),
-  // News notification preferences
-  newsNotificationsEnabled: boolean("news_notifications_enabled").default(false),
-  newsDeliveryMethod: text("news_delivery_method", { enum: ['email', 'sms', 'both'] }).default('email'),
-  newsFrequency: text("news_frequency", { enum: ['hourly', 'twice_daily', 'daily'] }).default('daily'),
-  newsTopics: jsonb("news_topics").default(['water treatment', 'sustainability']),
-  lastNewsSent: timestamp("last_news_sent"),
 });
 
 export const questions = pgTable("questions", {
@@ -181,7 +170,6 @@ export const knowledgeRevisions = pgTable("knowledge_revisions", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-// New table for newsletter tracking
 export const newsletters = pgTable("newsletters", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").references(() => users.id),
@@ -194,7 +182,6 @@ export const newsletters = pgTable("newsletters", {
   clickedLinks: jsonb("clicked_links").default([]),
 });
 
-// New tables for credentials tracking
 export const userCredentials = pgTable("user_credentials", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").references(() => users.id),
@@ -231,7 +218,6 @@ export const userPublications = pgTable("user_publications", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// New tables for skills and endorsements
 export const userSkills = pgTable("user_skills", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").references(() => users.id),
@@ -257,7 +243,6 @@ export const skillEndorsements = pgTable("skill_endorsements", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-// Relations
 export const userRelations = relations(users, ({ many }) => ({
   questions: many(questions),
   progress: many(userProgress),
@@ -428,7 +413,6 @@ export const skillEndorsementRelations = relations(skillEndorsements, ({ one }) 
   }),
 }));
 
-// Types
 export type QuestionType = 'multiple_choice' | 'true_false' | 'short_answer';
 export type DifficultyLevel = 'beginner' | 'intermediate' | 'expert';
 export type UserRole = 'user' | 'admin';
@@ -438,9 +422,9 @@ export type NewsDeliveryMethod = 'email' | 'sms' | 'both';
 export type NewsFrequency = 'hourly' | 'twice_daily' | 'daily';
 
 
-// Base types
 export type User = typeof users.$inferSelect;
-export type NewUser = typeof users.$inferInsert;
+export type InsertUser = typeof users.$inferInsert;
+export type SelectUser = typeof users.$inferSelect;
 export type Question = typeof questions.$inferSelect;
 export type NewQuestion = typeof questions.$inferInsert;
 export type UserProgress = typeof userProgress.$inferSelect;
@@ -473,8 +457,15 @@ export type NewUserSkill = typeof userSkills.$inferInsert;
 export type SkillEndorsement = typeof skillEndorsements.$inferSelect;
 export type NewSkillEndorsement = typeof skillEndorsements.$inferInsert;
 
-// Schemas
-export const insertUserSchema = createInsertSchema(users);
+export const insertUserSchema = createInsertSchema(users, {
+  role: z.enum(['user', 'admin']).optional(),
+  points: z.number().optional(),
+  streak: z.number().optional(),
+  phoneNumber: z.string().optional(),
+  smsNotificationsEnabled: z.boolean().optional(),
+  preferredQuizTime: z.string().optional(),
+  timezone: z.string().optional(),
+});
 export const selectUserSchema = createSelectSchema(users);
 export const insertQuestionSchema = createInsertSchema(questions, {
   type: z.enum(['multiple_choice', 'true_false', 'short_answer']),
@@ -505,13 +496,11 @@ export const insertKnowledgeRevisionSchema = createInsertSchema(knowledgeRevisio
 export const selectKnowledgeRevisionSchema = createSelectSchema(knowledgeRevisions);
 export const insertNewsletterSchema = createInsertSchema(newsletters);
 export const selectNewsletterSchema = createSelectSchema(newsletters);
-
 export const insertUserCredentialSchema = createInsertSchema(userCredentials, {
   type: z.enum(['certification', 'license', 'publication']),
   status: z.enum(['active', 'expired', 'pending', 'revoked']),
 });
 export const selectUserCredentialSchema = createSelectSchema(userCredentials);
-
 export const insertUserPublicationSchema = createInsertSchema(userPublications, {
   publicationType: z.enum([
     'journal_article',
@@ -522,7 +511,6 @@ export const insertUserPublicationSchema = createInsertSchema(userPublications, 
   ]),
 });
 export const selectUserPublicationSchema = createSelectSchema(userPublications);
-
 export const insertUserSkillSchema = createInsertSchema(userSkills);
 export const selectUserSkillSchema = createSelectSchema(userSkills);
 export const insertSkillEndorsementSchema = createInsertSchema(skillEndorsements, {
