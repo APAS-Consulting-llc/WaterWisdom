@@ -17,23 +17,33 @@ export function Navigation() {
           <Link href="/">
             <a className="text-xl font-bold text-blue-500">WaterQuiz</a>
           </Link>
-          
+
           <div className="flex space-x-4">
             <Link href="/quiz">
-              <a className={`${location === '/quiz' ? 'text-blue-500' : 'text-gray-600'}`}>
+              <a className={`${location === '/quiz' ? 'text-blue-500' : 'text-gray-600'} hover:text-blue-500`}>
                 Take Quiz
+              </a>
+            </Link>
+            <Link href="/forum">
+              <a className={`${location === '/forum' ? 'text-blue-500' : 'text-gray-600'} hover:text-blue-500`}>
+                Community Forum
+              </a>
+            </Link>
+            <Link href="/learning-paths">
+              <a className={`${location === '/learning-paths' ? 'text-blue-500' : 'text-gray-600'} hover:text-blue-500`}>
+                Learning Paths
               </a>
             </Link>
             {user.role === 'admin' && (
               <Link href="/admin">
-                <a className={`${location === '/admin' ? 'text-blue-500' : 'text-gray-600'}`}>
+                <a className={`${location === '/admin' ? 'text-blue-500' : 'text-gray-600'} hover:text-blue-500`}>
                   Admin
                 </a>
               </Link>
             )}
           </div>
         </div>
-        
+
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="relative">
