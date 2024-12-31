@@ -73,8 +73,6 @@ export default function KnowledgeBasePage() {
   });
 
   const handleFileUpload = async (file: File, type: 'image' | 'video') => {
-    // Here you would implement file upload logic
-    // For now, we'll simulate it with a timeout
     await new Promise(resolve => setTimeout(resolve, 1000));
     return `https://example.com/uploads/${file.name}`;
   };
@@ -275,12 +273,11 @@ export default function KnowledgeBasePage() {
         </div>
       </div>
 
-      <div className="mb-6">
+      <Tabs defaultValue="all" className="w-full">
         <TabsList className="w-full justify-start">
           <TabsTrigger
             value="all"
             onClick={() => setSelectedCategory(null)}
-            className={!selectedCategory ? 'bg-primary text-primary-foreground' : ''}
           >
             All Topics
           </TabsTrigger>
@@ -289,92 +286,176 @@ export default function KnowledgeBasePage() {
               key={category.value}
               value={category.value}
               onClick={() => setSelectedCategory(category.value)}
-              className={selectedCategory === category.value ? 'bg-primary text-primary-foreground' : ''}
             >
               {category.label}
             </TabsTrigger>
           ))}
         </TabsList>
-      </div>
 
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <AnimatePresence>
-          {filteredEntries.map((entry) => (
-            <motion.div
-              key={entry.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-            >
-              <Card
-                className={`relative h-full flex flex-col ${
-                  selectedEntryId === entry.id ? 'ring-2 ring-primary' : ''
-                }`}
-                onClick={() => setSelectedEntryId(entry.id)}
-              >
-                <CardHeader>
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <CardTitle className="text-xl">{entry.title}</CardTitle>
-                      <CardDescription>
-                        Category: {CATEGORIES.find(c => c.value === entry.category)?.label}
-                        {entry.tags && (
-                          <span className="ml-2">
-                            Tags: {(entry.tags as string[]).join(', ')}
-                          </span>
+        <TabsContent value="all" className="mt-6">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <AnimatePresence>
+              {filteredEntries.map((entry) => (
+                <motion.div
+                  key={entry.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                >
+                  <Card
+                    className={`relative h-full flex flex-col ${
+                      selectedEntryId === entry.id ? 'ring-2 ring-primary' : ''
+                    }`}
+                    onClick={() => setSelectedEntryId(entry.id)}
+                  >
+                    <CardHeader>
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <CardTitle className="text-xl">{entry.title}</CardTitle>
+                          <CardDescription>
+                            Category: {CATEGORIES.find(c => c.value === entry.category)?.label}
+                            {entry.tags && (
+                              <span className="ml-2">
+                                Tags: {(entry.tags as string[]).join(', ')}
+                              </span>
+                            )}
+                          </CardDescription>
+                        </div>
+                        {entry.expertVerified && (
+                          <Award className="h-5 w-5 text-primary" />
                         )}
-                      </CardDescription>
-                    </div>
-                    {entry.expertVerified && (
-                      <Award className="h-5 w-5 text-primary" />
-                    )}
-                  </div>
-                </CardHeader>
-                <CardContent className="flex-1">
-                  {entry.mediaType === 'video' && entry.mediaUrl && (
-                    <div className="relative mb-4 pt-[56.25%]">
-                      <video
-                        className="absolute top-0 left-0 w-full h-full rounded-lg object-cover"
-                        src={entry.mediaUrl}
-                        controls
-                      />
-                    </div>
-                  )}
-                  {entry.mediaType === 'image' && entry.mediaUrl && (
-                    <div className="mb-4">
-                      <img
-                        src={entry.mediaUrl}
-                        alt={entry.title}
-                        className="w-full rounded-lg object-cover"
-                      />
-                    </div>
-                  )}
-                  <div className="prose prose-slate dark:prose-invert max-w-none">
-                    {entry.content}
-                  </div>
-                </CardContent>
-                <CardFooter className="border-t">
-                  <div className="w-full flex justify-between items-center text-sm text-muted-foreground">
-                    <div className="flex items-center gap-4">
-                      <Button variant="ghost" size="sm" className="flex items-center gap-1">
-                        <ThumbsUp className="h-4 w-4" />
-                        <span>{entry.score || 0}</span>
-                      </Button>
-                      <Button variant="ghost" size="sm" className="flex items-center gap-1">
-                        <History className="h-4 w-4" />
-                        <span>{entry.viewCount || 0} views</span>
-                      </Button>
-                    </div>
-                    <span>
-                      Updated {format(new Date(entry.updatedAt), 'MMM d, yyyy')}
-                    </span>
-                  </div>
-                </CardFooter>
-              </Card>
-            </motion.div>
-          ))}
-        </AnimatePresence>
-      </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="flex-1">
+                      {entry.mediaType === 'video' && entry.mediaUrl && (
+                        <div className="relative mb-4 pt-[56.25%]">
+                          <video
+                            className="absolute top-0 left-0 w-full h-full rounded-lg object-cover"
+                            src={entry.mediaUrl}
+                            controls
+                          />
+                        </div>
+                      )}
+                      {entry.mediaType === 'image' && entry.mediaUrl && (
+                        <div className="mb-4">
+                          <img
+                            src={entry.mediaUrl}
+                            alt={entry.title}
+                            className="w-full rounded-lg object-cover"
+                          />
+                        </div>
+                      )}
+                      <div className="prose prose-slate dark:prose-invert max-w-none">
+                        {entry.content}
+                      </div>
+                    </CardContent>
+                    <CardFooter className="border-t">
+                      <div className="w-full flex justify-between items-center text-sm text-muted-foreground">
+                        <div className="flex items-center gap-4">
+                          <Button variant="ghost" size="sm" className="flex items-center gap-1">
+                            <ThumbsUp className="h-4 w-4" />
+                            <span>{entry.score || 0}</span>
+                          </Button>
+                          <Button variant="ghost" size="sm" className="flex items-center gap-1">
+                            <History className="h-4 w-4" />
+                            <span>{entry.viewCount || 0} views</span>
+                          </Button>
+                        </div>
+                        <span>
+                          Updated {format(new Date(entry.updatedAt), 'MMM d, yyyy')}
+                        </span>
+                      </div>
+                    </CardFooter>
+                  </Card>
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </div>
+        </TabsContent>
+
+        {CATEGORIES.map(category => (
+          <TabsContent key={category.value} value={category.value} className="mt-6">
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <AnimatePresence>
+                {filteredEntries.filter(entry => entry.category === category.value).map((entry) => (
+                  <motion.div
+                    key={entry.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                  >
+                    <Card
+                      className={`relative h-full flex flex-col ${
+                        selectedEntryId === entry.id ? 'ring-2 ring-primary' : ''
+                      }`}
+                      onClick={() => setSelectedEntryId(entry.id)}
+                    >
+                      <CardHeader>
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <CardTitle className="text-xl">{entry.title}</CardTitle>
+                            <CardDescription>
+                              Category: {CATEGORIES.find(c => c.value === entry.category)?.label}
+                              {entry.tags && (
+                                <span className="ml-2">
+                                  Tags: {(entry.tags as string[]).join(', ')}
+                                </span>
+                              )}
+                            </CardDescription>
+                          </div>
+                          {entry.expertVerified && (
+                            <Award className="h-5 w-5 text-primary" />
+                          )}
+                        </div>
+                      </CardHeader>
+                      <CardContent className="flex-1">
+                        {entry.mediaType === 'video' && entry.mediaUrl && (
+                          <div className="relative mb-4 pt-[56.25%]">
+                            <video
+                              className="absolute top-0 left-0 w-full h-full rounded-lg object-cover"
+                              src={entry.mediaUrl}
+                              controls
+                            />
+                          </div>
+                        )}
+                        {entry.mediaType === 'image' && entry.mediaUrl && (
+                          <div className="mb-4">
+                            <img
+                              src={entry.mediaUrl}
+                              alt={entry.title}
+                              className="w-full rounded-lg object-cover"
+                            />
+                          </div>
+                        )}
+                        <div className="prose prose-slate dark:prose-invert max-w-none">
+                          {entry.content}
+                        </div>
+                      </CardContent>
+                      <CardFooter className="border-t">
+                        <div className="w-full flex justify-between items-center text-sm text-muted-foreground">
+                          <div className="flex items-center gap-4">
+                            <Button variant="ghost" size="sm" className="flex items-center gap-1">
+                              <ThumbsUp className="h-4 w-4" />
+                              <span>{entry.score || 0}</span>
+                            </Button>
+                            <Button variant="ghost" size="sm" className="flex items-center gap-1">
+                              <History className="h-4 w-4" />
+                              <span>{entry.viewCount || 0} views</span>
+                            </Button>
+                          </div>
+                          <span>
+                            Updated {format(new Date(entry.updatedAt), 'MMM d, yyyy')}
+                          </span>
+                        </div>
+                      </CardFooter>
+                    </Card>
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+            </div>
+          </TabsContent>
+        ))}
+      </Tabs>
     </div>
   );
 }
