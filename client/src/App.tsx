@@ -9,6 +9,7 @@ import SettingsPage from './pages/settings';
 import SubmitQuestionPage from './pages/SubmitQuestionPage';
 import LearningPathsPage from './pages/LearningPathsPage';
 import ForumPage from './pages/ForumPage';
+import ChatBoard from './pages/ChatBoard';
 import { Navigation } from './components/layout/Navigation';
 import { Loader2 } from 'lucide-react';
 import './styles/animations.css';
@@ -40,6 +41,7 @@ function App() {
           <Route path="/submit-question" component={SubmitQuestionPage} />
           <Route path="/learning-paths" component={LearningPathsPage} />
           <Route path="/forum" component={ForumPage} />
+          <Route path="/chat" component={ChatBoard} />
           {user.role === 'admin' && (
             <Route path="/admin" component={AdminPage} />
           )}
