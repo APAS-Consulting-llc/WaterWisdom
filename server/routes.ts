@@ -3,12 +3,36 @@ import { createServer, type Server } from "http";
 import { setupAuth } from "./auth";
 import { db } from "@db";
 import { questions, userProgress, achievements, users } from "@db/schema";
-import { eq, and, count } from "drizzle-orm";
+import { eq, and, count, avg } from "drizzle-orm";
+
+type DifficultyLevel = 'beginner' | 'intermediate' | 'expert';
+
+interface PerformanceMetrics {
+  correctAnswers: number;
+  totalQuestions: number;
+  streakCount: number;
+  categoryAccuracy: Record<string, number>;
+}
+
+function calculateRecommendedDifficulty(
+  currentDifficulty: DifficultyLevel,
+  accuracy: number,
+  streak: number
+): DifficultyLevel {
+  if (accuracy >= 80 && streak >= 3) {
+    return currentDifficulty === 'beginner' ? 'intermediate' : 
+           currentDifficulty === 'intermediate' ? 'expert' : 'expert';
+  } else if (accuracy <= 40) {
+    return currentDifficulty === 'expert' ? 'intermediate' : 
+           currentDifficulty === 'intermediate' ? 'beginner' : 'beginner';
+  }
+  return currentDifficulty;
+}
 
 export function registerRoutes(app: Express): Server {
   setupAuth(app);
 
-  // Get questions
+  // Get questions with adaptive difficulty
   app.get("/api/questions", async (req, res) => {
     try {
       const { category, difficulty } = req.query;
@@ -28,13 +52,13 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Submit answer
+  // Submit answer with performance tracking
   app.post("/api/submit-answer", async (req, res) => {
     if (!req.user) {
       return res.status(401).send("Not authenticated");
     }
 
-    const { questionId, answer } = req.body;
+    const { questionId, answer, category, difficulty, currentStreak } = req.body;
     try {
       const [question] = await db
         .select()
@@ -47,6 +71,7 @@ export function registerRoutes(app: Express): Server {
 
       const correct = answer.toLowerCase() === question.correctAnswer.toLowerCase();
 
+      // Record progress
       const [progress] = await db
         .insert(userProgress)
         .values({
@@ -56,9 +81,66 @@ export function registerRoutes(app: Express): Server {
         })
         .returning();
 
-      // Return both the progress and the question explanation
+      // Calculate performance metrics
+      const userStats = await db
+        .select({
+          total: count(),
+          correct: count(userProgress.correct),
+        })
+        .from(userProgress)
+        .where(and(
+          eq(userProgress.userId, req.user.id),
+          eq(questions.category, category)
+        ))
+        .innerJoin(questions, eq(userProgress.questionId, questions.id));
+
+      // Calculate category accuracy
+      const categoryAccuracy = await db
+        .select({
+          category: questions.category,
+          accuracy: avg(userProgress.correct ? 1 : 0),
+        })
+        .from(userProgress)
+        .innerJoin(questions, eq(userProgress.questionId, questions.id))
+        .where(eq(userProgress.userId, req.user.id))
+        .groupBy(questions.category);
+
+      const categoryAccuracyMap = Object.fromEntries(
+        categoryAccuracy.map(({ category, accuracy }) => [
+          category,
+          Number(accuracy) * 100,
+        ])
+      );
+
+      const performanceMetrics: PerformanceMetrics = {
+        correctAnswers: Number(userStats[0]?.correct || 0),
+        totalQuestions: Number(userStats[0]?.total || 0),
+        streakCount: correct ? currentStreak + 1 : 0,
+        categoryAccuracy: categoryAccuracyMap,
+      };
+
+      // Calculate recommended difficulty
+      const accuracy = (performanceMetrics.correctAnswers / performanceMetrics.totalQuestions) * 100;
+      const recommendedDifficulty = calculateRecommendedDifficulty(
+        difficulty as DifficultyLevel,
+        accuracy,
+        performanceMetrics.streakCount
+      );
+
+      // Update user streak and points
+      await db
+        .update(users)
+        .set({ 
+          streak: correct ? currentStreak + 1 : 0,
+          points: req.user.points + (correct ? 10 : 0)
+        })
+        .where(eq(users.id, req.user.id));
+
+      // Return progress with performance metrics and recommended difficulty
       res.json({
         ...progress,
+        performanceMetrics,
+        recommendedDifficulty,
         explanation: question.explanation
       });
     } catch (error) {

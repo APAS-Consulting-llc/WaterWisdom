@@ -7,6 +7,8 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import type { Question, DifficultyLevel } from '@db/schema';
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { ArrowUp, ArrowDown } from "lucide-react";
 
 export default function QuizPage() {
   const [quizStarted, setQuizStarted] = useState(false);
@@ -17,6 +19,10 @@ export default function QuizPage() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [streak, setStreak] = useState(0);
   const [score, setScore] = useState(0);
+  const [showDifficultyChange, setShowDifficultyChange] = useState<{
+    from: DifficultyLevel;
+    to: DifficultyLevel;
+  } | null>(null);
   const { toast } = useToast();
 
   if (isLoading) {
@@ -58,11 +64,12 @@ export default function QuizPage() {
   }) => {
     setMaxQuestions(config.numQuestions);
     setSelectedCategory(config.category);
-    setSelectedDifficulty(config.difficulty);
+    setSelectedDifficulty(config.difficulty || 'beginner');
     setQuizStarted(true);
     setCurrentIndex(0);
     setScore(0);
     setStreak(0);
+    setShowDifficultyChange(null);
   };
 
   const handleNextQuestion = () => {
@@ -90,29 +97,37 @@ export default function QuizPage() {
   };
 
   const handleSubmit = async (answer: string) => {
-    if (!currentQuestion) return;
+    if (!currentQuestion || !selectedDifficulty) return;
 
     try {
       const result = await submitAnswer({
         questionId: currentQuestion.id,
-        answer
+        answer,
+        category: currentQuestion.category,
+        difficulty: selectedDifficulty,
+        currentStreak: streak
       });
 
-      if (result.correct) {
+      if ('correct' in result) {
         const points = calculatePoints(currentQuestion.difficulty, streak + 1);
         setScore(prev => prev + points);
-        setStreak(prev => prev + 1);
+        setStreak(prev => result.correct ? prev + 1 : 0);
+
+        // Check if difficulty should be adjusted
+        if (result.recommendedDifficulty !== selectedDifficulty) {
+          setShowDifficultyChange({
+            from: selectedDifficulty,
+            to: result.recommendedDifficulty
+          });
+          setSelectedDifficulty(result.recommendedDifficulty);
+        }
+
         toast({
-          title: `Correct! +${points} points`,
-          description: `Keep going! You're on a ${streak + 1} question streak! 🔥`,
-          variant: 'default'
-        });
-      } else {
-        setStreak(0);
-        toast({
-          title: 'Incorrect',
-          description: 'Keep learning! Review the explanation below.',
-          variant: 'destructive'
+          title: result.correct ? `Correct! +${points} points` : 'Incorrect',
+          description: result.correct 
+            ? `Keep going! You're on a ${streak + 1} question streak! 🔥`
+            : 'Keep learning! Review the explanation below.',
+          variant: result.correct ? 'default' : 'destructive'
         });
       }
     } catch (error) {
@@ -139,6 +154,24 @@ export default function QuizPage() {
         total={maxQuestions}
         streak={streak}
       />
+
+      {showDifficultyChange && (
+        <Alert className="mb-4">
+          <AlertTitle className="flex items-center gap-2">
+            {showDifficultyChange.from === 'beginner' ? (
+              <ArrowUp className="h-4 w-4 text-green-500" />
+            ) : (
+              <ArrowDown className="h-4 w-4 text-orange-500" />
+            )}
+            Difficulty Adjusted
+          </AlertTitle>
+          <AlertDescription>
+            Based on your performance, the difficulty has been adjusted from{' '}
+            <span className="font-medium">{showDifficultyChange.from}</span> to{' '}
+            <span className="font-medium">{showDifficultyChange.to}</span>.
+          </AlertDescription>
+        </Alert>
+      )}
 
       <div className="relative">
         <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-cyan-500/10 rounded-lg -z-10" />
