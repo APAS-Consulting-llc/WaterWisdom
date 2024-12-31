@@ -4,9 +4,16 @@ import { setupAuth } from "./auth";
 import { db } from "@db";
 import { users } from "@db/schema";
 import { eq } from "drizzle-orm";
+import CollaborationService from "./services/collaborationService";
 
 export function registerRoutes(app: Express): Server {
   setupAuth(app);
+
+  // Create HTTP server
+  const httpServer = createServer(app);
+
+  // Initialize WebSocket collaboration service
+  new CollaborationService(httpServer);
 
   // Add user preferences endpoint
   app.post("/api/user/preferences", async (req, res) => {
@@ -793,7 +800,6 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  const httpServer = createServer(app);
   return httpServer;
 }
 
