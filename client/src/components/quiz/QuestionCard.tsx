@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { ShareButtons } from '@/components/ui/ShareButtons';
 import { Badge } from '@/components/ui/Badge';
+import { useContributor } from '@/hooks/use-contributor';
 import { 
   BeakerIcon, 
   Droplets, 
@@ -15,7 +16,8 @@ import {
   GraduationCap,
   AlertCircle, 
   CheckCircle2, 
-  BookOpen 
+  BookOpen,
+  Loader2
 } from 'lucide-react';
 import type { Question } from '@db/schema';
 
@@ -24,17 +26,21 @@ interface QuestionCardProps {
   onSubmit: (answer: string) => void;
 }
 
+const iconMap: Record<string, any> = {
+  BeakerIcon,
+  Droplets,
+  ShieldCheck,
+  Lightbulb,
+  GraduationCap,
+};
+
 export function QuestionCard({ question, onSubmit }: QuestionCardProps) {
   const [answer, setAnswer] = useState('');
   const [isAnswered, setIsAnswered] = useState(false);
   const { toast } = useToast();
   const shareUrl = typeof window !== 'undefined' ? window.location.href : '';
 
-  // Example badges for Hardeep Anand (will be replaced with dynamic data)
-  const badges = [
-    { name: 'Treatment Specialist', icon: BeakerIcon, color: 'blue' },
-    { name: 'Water Saver', icon: Droplets, color: 'green' },
-  ];
+  const { data: contributorData, isLoading: isLoadingContributor } = useContributor(question.createdBy || 0);
 
   const handleSubmit = () => {
     if (!answer) {
@@ -51,7 +57,7 @@ export function QuestionCard({ question, onSubmit }: QuestionCardProps) {
 
   return (
     <Card className="w-full max-w-2xl mx-auto">
-      <CardHeader className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-t-lg">
+      <CardHeader className="bg-gradient-radial from-blue-500/20 via-cyan-500/20 to-transparent text-white rounded-t-lg">
         <div className="flex items-center justify-between mb-4">
           <div>
             <span className="text-sm uppercase">{question.category}</span>
@@ -65,19 +71,29 @@ export function QuestionCard({ question, onSubmit }: QuestionCardProps) {
         <div className="bg-white/10 rounded-lg p-4">
           <div className="mb-3">
             <h3 className="text-sm font-medium text-white">Contributed by:</h3>
-            <div className="flex items-center gap-2 mt-1">
-              <span className="font-medium">Hardeep Anand</span>
-              <div className="flex gap-1">
-                {badges.map((badge, index) => (
-                  <Badge
-                    key={index}
-                    name={badge.name}
-                    icon={badge.icon}
-                    color={badge.color}
-                  />
-                ))}
+            {isLoadingContributor ? (
+              <div className="flex items-center gap-2 mt-2">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span>Loading contributor info...</span>
               </div>
-            </div>
+            ) : contributorData ? (
+              <div className="flex items-center gap-2 mt-1">
+                <span className="font-medium">{contributorData.contributor.username}</span>
+                <div className="flex gap-1">
+                  {contributorData.badges.map((badge: any, index: number) => {
+                    const Icon = iconMap[badge.badge.icon];
+                    return (
+                      <Badge
+                        key={index}
+                        name={badge.badge.name}
+                        icon={Icon}
+                        color={badge.badge.color}
+                      />
+                    );
+                  })}
+                </div>
+              </div>
+            ) : null}
           </div>
 
           <div>
@@ -155,7 +171,7 @@ export function QuestionCard({ question, onSubmit }: QuestionCardProps) {
                   {question.explanation}
                 </p>
                 <p className="text-xs text-blue-600 mt-4 italic">
-                  Question contributed by Hardeep Anand • Powered by Water.AI - All rights reserved 2024
+                  Question contributed by {contributorData ? contributorData.contributor.username : 'Unknown'} • Powered by Water.AI - All rights reserved 2024
                 </p>
               </div>
             )}

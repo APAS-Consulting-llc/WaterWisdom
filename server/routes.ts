@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { setupAuth } from "./auth";
 import { db } from "@db";
-import { questions, userProgress, achievements, users, learningPaths, userLearningPaths, forumPosts, forumComments, forumReactions } from "@db/schema";
+import { questions, userProgress, achievements, users, learningPaths, userLearningPaths, forumPosts, forumComments, forumReactions, badges, userBadges, badgeCategories } from "@db/schema";
 import { eq, and, count, avg, desc } from "drizzle-orm";
 import { startDailyQuizScheduler } from './services/schedulerService';
 import { handleChatMessage } from './services/chatService';
@@ -565,6 +565,60 @@ export function registerRoutes(app: Express): Server {
       res.json(reaction);
     } catch (error) {
       res.status(500).send("Failed to add reaction");
+    }
+  });
+
+  // Add this new endpoint
+  app.get("/api/contributors/:userId", async (req, res) => {
+    const userId = parseInt(req.params.userId);
+
+    try {
+      // Get contributor's basic info
+      const [contributor] = await db
+        .select()
+        .from(users)
+        .where(eq(users.id, userId));
+
+      if (!contributor) {
+        return res.status(404).send("Contributor not found");
+      }
+
+      // Get contributor's badges with category information
+      const contributorBadges = await db
+        .select({
+          badge: badges,
+          category: badgeCategories,
+        })
+        .from(userBadges)
+        .where(eq(userBadges.userId, userId))
+        .innerJoin(badges, eq(userBadges.badgeId, badges.id))
+        .innerJoin(badgeCategories, eq(badges.categoryId, badgeCategories.id));
+
+      // Get contribution statistics
+      const [stats] = await db
+        .select({
+          totalQuestions: count(),
+          approvedQuestions: count(questions.approved),
+        })
+        .from(questions)
+        .where(eq(questions.createdBy, userId));
+
+      res.json({
+        contributor: {
+          id: contributor.id,
+          username: contributor.username,
+          points: contributor.points,
+          joinedAt: contributor.createdAt,
+        },
+        badges: contributorBadges,
+        stats: {
+          totalQuestions: Number(stats?.totalQuestions || 0),
+          approvedQuestions: Number(stats?.approvedQuestions || 0),
+        },
+      });
+    } catch (error) {
+      console.error("Error fetching contributor info:", error);
+      res.status(500).send("Failed to fetch contributor information");
     }
   });
 
