@@ -2,8 +2,8 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { setupAuth } from "./auth";
 import { db } from "@db";
-import { users, userCredentials, userPublications, questions, userProgress, achievements, learningPaths, userLearningPaths, forumPosts, forumComments, forumReactions, badges, userBadges, badgeCategories, knowledgeEntries, knowledgeVotes, knowledgeRevisions } from "@db/schema";
-import { eq, and, count, avg, desc } from "drizzle-orm";
+import { users, userCredentials, userPublications, questions, userProgress, achievements, learningPaths, userLearningPaths, forumPosts, forumComments, forumReactions, badges, userBadges, badgeCategories, knowledgeEntries, knowledgeVotes, knowledgeRevisions, userSkills, skillEndorsements } from "@db/schema";
+import { eq, and, count, avg, desc, sql } from "drizzle-orm";
 import CollaborationService from "./services/collaborationService";
 import { handleChatMessage } from './services/chatService';
 import { startDailyQuizScheduler } from './services/schedulerService';
@@ -900,6 +900,115 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  // Add skill management endpoints at the end of the file, before return httpServer
+  app.post("/api/user/skills", async (req, res) => {
+    if (!req.user) {
+      return res.status(401).send("Not authenticated");
+    }
+
+    try {
+      const [skill] = await db
+        .insert(userSkills)
+        .values({
+          ...req.body,
+          userId: req.user.id,
+        })
+        .returning();
+
+      res.json(skill);
+    } catch (error) {
+      console.error("Error adding skill:", error);
+      res.status(500).send("Failed to add skill");
+    }
+  });
+
+  app.get("/api/user/skills/:userId", async (req, res) => {
+    const userId = parseInt(req.params.userId);
+
+    try {
+      const skills = await db
+        .select()
+        .from(userSkills)
+        .where(eq(userSkills.userId, userId))
+        .orderBy(desc(userSkills.endorsementCount));
+
+      const skillsWithEndorsements = await Promise.all(
+        skills.map(async (skill) => {
+          const endorsements = await db
+            .select()
+            .from(skillEndorsements)
+            .where(eq(skillEndorsements.skillId, skill.id))
+            .limit(3);
+
+          return {
+            ...skill,
+            endorsements,
+          };
+        })
+      );
+
+      res.json(skillsWithEndorsements);
+    } catch (error) {
+      console.error("Error fetching skills:", error);
+      res.status(500).send("Failed to fetch skills");
+    }
+  });
+
+  app.post("/api/user/skills/endorse", async (req, res) => {
+    if (!req.user) {
+      return res.status(401).send("Not authenticated");
+    }
+
+    const { skillId, expertise, comment, endorsedUserId } = req.body;
+
+    try {
+      // Check if user is trying to endorse their own skill
+      if (endorsedUserId === req.user.id) {
+        return res.status(400).send("Cannot endorse your own skill");
+      }
+
+      // Check if already endorsed
+      const [existingEndorsement] = await db
+        .select()
+        .from(skillEndorsements)
+        .where(
+          and(
+            eq(skillEndorsements.skillId, skillId),
+            eq(skillEndorsements.endorserId, req.user.id)
+          )
+        );
+
+      if (existingEndorsement) {
+        return res.status(400).send("Already endorsed this skill");
+      }
+
+      const [endorsement] = await db
+        .insert(skillEndorsements)
+        .values({
+          skillId,
+          endorserId: req.user.id,
+          endorsedUserId,
+          expertise,
+          comment,
+        })
+        .returning();
+
+      // Update endorsement count
+      await db
+        .update(userSkills)
+        .set({
+          endorsementCount: sql`${userSkills.endorsementCount} + 1`
+        })
+        .where(eq(userSkills.id, skillId));
+
+      res.json(endorsement);
+    } catch (error) {
+      console.error("Error adding endorsement:", error);
+      res.status(500).send("Failed to add endorsement");
+    }
+  });
+
+  // Export server at the end
   return httpServer;
 }
 

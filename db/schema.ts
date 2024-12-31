@@ -231,6 +231,32 @@ export const userPublications = pgTable("user_publications", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// New tables for skills and endorsements
+export const userSkills = pgTable("user_skills", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id),
+  subject: text("subject").notNull(),
+  level: integer("level").notNull().default(0),
+  description: text("description"),
+  endorsementCount: integer("endorsement_count").notNull().default(0),
+  verified: boolean("verified").notNull().default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const skillEndorsements = pgTable("skill_endorsements", {
+  id: serial("id").primaryKey(),
+  skillId: integer("skill_id").references(() => userSkills.id),
+  endorserId: integer("endorser_id").references(() => users.id),
+  endorsedUserId: integer("endorsed_user_id").references(() => users.id),
+  comment: text("comment"),
+  expertise: text("expertise", {
+    enum: ['beginner', 'intermediate', 'expert']
+  }).notNull(),
+  validatedAt: timestamp("validated_at").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Relations
 export const userRelations = relations(users, ({ many }) => ({
   questions: many(questions),
@@ -245,8 +271,11 @@ export const userRelations = relations(users, ({ many }) => ({
   knowledgeVotes: many(knowledgeVotes),
   knowledgeRevisions: many(knowledgeRevisions),
   newsletters: many(newsletters),
-  credentials: many(userCredentials), // New relation
-  publications: many(userPublications), // New relation
+  credentials: many(userCredentials),
+  publications: many(userPublications),
+  skills: many(userSkills),
+  givenEndorsements: many(skillEndorsements, { relationName: "endorser" }),
+  receivedEndorsements: many(skillEndorsements, { relationName: "endorsedUser" }),
 }));
 
 export const questionRelations = relations(questions, ({ one, many }) => ({
@@ -362,7 +391,6 @@ export const knowledgeRevisionRelations = relations(knowledgeRevisions, ({ one }
   }),
 }));
 
-
 export const userCredentialRelations = relations(userCredentials, ({ one }) => ({
   user: one(users, {
     fields: [userCredentials.userId],
@@ -373,6 +401,29 @@ export const userCredentialRelations = relations(userCredentials, ({ one }) => (
 export const userPublicationRelations = relations(userPublications, ({ one }) => ({
   user: one(users, {
     fields: [userPublications.userId],
+    references: [users.id],
+  }),
+}));
+
+export const userSkillRelations = relations(userSkills, ({ one, many }) => ({
+  user: one(users, {
+    fields: [userSkills.userId],
+    references: [users.id],
+  }),
+  endorsements: many(skillEndorsements),
+}));
+
+export const skillEndorsementRelations = relations(skillEndorsements, ({ one }) => ({
+  skill: one(userSkills, {
+    fields: [skillEndorsements.skillId],
+    references: [userSkills.id],
+  }),
+  endorser: one(users, {
+    fields: [skillEndorsements.endorserId],
+    references: [users.id],
+  }),
+  endorsedUser: one(users, {
+    fields: [skillEndorsements.endorsedUserId],
     references: [users.id],
   }),
 }));
@@ -417,6 +468,10 @@ export type UserCredential = typeof userCredentials.$inferSelect;
 export type NewUserCredential = typeof userCredentials.$inferInsert;
 export type UserPublication = typeof userPublications.$inferSelect;
 export type NewUserPublication = typeof userPublications.$inferInsert;
+export type UserSkill = typeof userSkills.$inferSelect;
+export type NewUserSkill = typeof userSkills.$inferInsert;
+export type SkillEndorsement = typeof skillEndorsements.$inferSelect;
+export type NewSkillEndorsement = typeof skillEndorsements.$inferInsert;
 
 // Schemas
 export const insertUserSchema = createInsertSchema(users);
@@ -467,3 +522,10 @@ export const insertUserPublicationSchema = createInsertSchema(userPublications, 
   ]),
 });
 export const selectUserPublicationSchema = createSelectSchema(userPublications);
+
+export const insertUserSkillSchema = createInsertSchema(userSkills);
+export const selectUserSkillSchema = createSelectSchema(userSkills);
+export const insertSkillEndorsementSchema = createInsertSchema(skillEndorsements, {
+  expertise: z.enum(['beginner', 'intermediate', 'expert']),
+});
+export const selectSkillEndorsementSchema = createSelectSchema(skillEndorsements);

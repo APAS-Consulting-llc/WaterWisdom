@@ -6,6 +6,7 @@ import { SkillRadar, type Skill } from '@/components/profile/SkillRadar';
 import { ShareButtons } from '@/components/ui/ShareButtons';
 import CredentialsManager from '@/components/profile/CredentialsManager';
 import ResumeGenerator from '@/components/profile/ResumeGenerator';
+import SkillEndorsement from '@/components/profile/SkillEndorsement';
 import { useUser } from '@/hooks/use-user';
 import { Loader2, Trophy, Target, Award, Brain } from 'lucide-react';
 import { ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
@@ -30,7 +31,7 @@ export default function ProfilePage() {
     queryKey: ['/api/progress'],
   });
 
-  if (loadingAchievements || loadingProgress) {
+  if (!user || loadingAchievements || loadingProgress) {
     return (
       <div className="flex items-center justify-center min-h-[calc(100vh-4rem)]">
         <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
@@ -39,11 +40,11 @@ export default function ProfilePage() {
   }
 
   const totalQuestions = progress?.length || 0;
-  const correctAnswers = progress?.filter(p => p.correct).length || 0;
+  const correctAnswers = progress?.filter((p: any) => p.correct).length || 0;
   const accuracy = totalQuestions > 0 ? (correctAnswers / totalQuestions) * 100 : 0;
 
   // Calculate category statistics
-  const categoryStats = progress?.reduce((acc: Record<string, { total: number; correct: number }>, p) => {
+  const categoryStats = progress?.reduce((acc: Record<string, { total: number; correct: number }>, p: any) => {
     const category = p.question?.category || 'Unknown';
     if (!acc[category]) {
       acc[category] = { total: 0, correct: 0 };
@@ -166,6 +167,8 @@ export default function ProfilePage() {
             </CardContent>
           </Card>
 
+          <SkillEndorsement userId={user.id} />
+
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>Achievements</CardTitle>
@@ -179,7 +182,7 @@ export default function ProfilePage() {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {achievements?.map((achievement) => (
+                {achievements?.map((achievement: any) => (
                   <AchievementBadge
                     key={achievement.id}
                     achievement={achievement}
