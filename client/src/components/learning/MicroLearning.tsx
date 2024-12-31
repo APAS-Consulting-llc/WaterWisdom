@@ -12,11 +12,17 @@ import {
   LinkedinShareButton,
 } from 'react-share';
 
+interface MicroLearningContent {
+  content: string;
+  title?: string;
+  author?: string;
+}
+
 export default function MicroLearning() {
   const { toast } = useToast();
   const [refreshKey, setRefreshKey] = useState(0);
 
-  const { data: content, isLoading, error } = useQuery({
+  const { data: content, isLoading, error } = useQuery<MicroLearningContent>({
     queryKey: ['/api/micro-learning', refreshKey],
     refetchInterval: 1000 * 60 * 60, // Refetch every hour
   });
@@ -26,7 +32,7 @@ export default function MicroLearning() {
   };
 
   const shareUrl = window.location.href;
-  const shareText = content ? `${content.substring(0, 200)}... \n\nPowered by ONE WATER HUB` : '';
+  const shareText = content ? `${content.content.substring(0, 200)}... \n\nPowered by ONE WATER HUB` : '';
   const shareTitle = 'Water Industry Insights';
 
   if (error) {
@@ -82,7 +88,7 @@ export default function MicroLearning() {
                   Share on LinkedIn
                 </Button>
               </LinkedinShareButton>
-              <FacebookShareButton url={shareUrl} quote={shareText}>
+              <FacebookShareButton url={shareUrl} hashtag="#OneWaterHub">
                 <Button variant="outline" size="sm" className="gap-2">
                   <Facebook className="h-4 w-4" />
                   Share on Facebook
@@ -95,12 +101,14 @@ export default function MicroLearning() {
               <div className="flex justify-center py-8">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
               </div>
-            ) : (
+            ) : content ? (
               <div className="prose prose-slate dark:prose-invert max-w-none">
-                {content?.split('\n\n').map((section, index) => (
+                {content.content.split('\n\n').map((section, index) => (
                   <p key={index} className="mb-4">{section}</p>
                 ))}
               </div>
+            ) : (
+              <p>No content available</p>
             )}
           </CardContent>
           <CardFooter className="text-sm text-muted-foreground flex justify-between items-center">

@@ -97,7 +97,7 @@ export function QuestionCard({ question, onSubmit }: QuestionCardProps) {
         </motion.div>
       )}
 
-      <CardHeader className="bg-gradient-radial from-blue-500/20 via-cyan-500/20 to-transparent text-white rounded-t-lg">
+      <CardHeader className="bg-gradient-radial from-blue-500/20 via-cyan-500/20 to-transparent text-foreground rounded-t-lg">
         <div className="flex items-center justify-between mb-4">
           <div>
             <span className="text-sm uppercase">{question.category}</span>
@@ -116,7 +116,7 @@ export function QuestionCard({ question, onSubmit }: QuestionCardProps) {
 
         <div className="bg-white/10 rounded-lg p-4">
           <div className="mb-3">
-            <h3 className="text-sm font-medium text-white">Contributed by:</h3>
+            <h3 className="text-sm font-medium">Contributed by:</h3>
             {isLoadingContributor ? (
               <div className="flex items-center gap-2 mt-2">
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -153,12 +153,12 @@ export function QuestionCard({ question, onSubmit }: QuestionCardProps) {
             ) : null}
           </div>
 
-          <div>
-            <h3 className="text-sm font-medium text-white mb-2">Share this question:</h3>
+          <div className="mt-4">
+            <h3 className="text-sm font-medium mb-2">Share this question:</h3>
             <ShareButtons 
               url={shareUrl}
-              title={`🌊 Water Knowledge Quiz: ${question.question}`}
-              description={`Test your knowledge in ${question.category}! Join me in learning about water sector topics at Water.AI`}
+              title={`🌊 ONE WATER HUB Quiz: ${question.question}`}
+              description={`Test your water sector knowledge! Join me in learning about ${question.category} at ONE WATER HUB`}
             />
           </div>
         </div>
@@ -295,7 +295,7 @@ export function QuestionCard({ question, onSubmit }: QuestionCardProps) {
                     {question.explanation}
                   </p>
                   <p className="text-xs text-blue-600 mt-4 italic">
-                    Question contributed by {contributorData ? contributorData.contributor.username : 'Unknown'} • Powered by One Water.AI - All rights reserved 2024
+                    Question contributed by {contributorData ? contributorData.contributor.username : 'Unknown'} • Powered by ONE WATER HUB - All rights reserved 2024
                   </p>
                 </motion.div>
               )}
