@@ -12,10 +12,8 @@ import ForumPage from './pages/ForumPage';
 import ChatBoard from './pages/ChatBoard';
 import KnowledgeBasePage from './pages/KnowledgeBasePage';
 import ThemePage from './pages/ThemePage';
-import PortfolioPage from './pages/PortfolioPage'; // New import
 import { Navigation } from './components/layout/Navigation';
 import { Loader2 } from 'lucide-react';
-import './styles/animations.css';
 
 function App() {
   const { user, isLoading } = useUser();
@@ -33,7 +31,7 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 wave-bg">
+    <div className="min-h-screen bg-gray-50">
       <Navigation />
       <main className="container mx-auto px-4 py-8">
         <Switch>
@@ -42,7 +40,6 @@ function App() {
           <Route path="/profile" component={ProfilePage} />
           <Route path="/settings" component={SettingsPage} />
           <Route path="/theme" component={ThemePage} />
-          <Route path="/portfolio" component={PortfolioPage} /> {/* New route */}
           <Route path="/submit-question" component={SubmitQuestionPage} />
           <Route path="/learning-paths" component={LearningPathsPage} />
           <Route path="/forum" component={ForumPage} />
