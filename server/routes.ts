@@ -12,15 +12,15 @@ export function registerRoutes(app: Express): Server {
   app.get("/api/questions", async (req, res) => {
     try {
       const { category, difficulty } = req.query;
-      let query = db.select().from(questions);
-      
+      let query = db.select().from(questions).where(eq(questions.approved, true));
+
       if (category) {
         query = query.where(eq(questions.category, category as string));
       }
       if (difficulty) {
         query = query.where(eq(questions.difficulty, difficulty as string));
       }
-      
+
       const questionsList = await query;
       res.json(questionsList);
     } catch (error) {
@@ -46,7 +46,7 @@ export function registerRoutes(app: Express): Server {
       }
 
       const correct = answer.toLowerCase() === question.correctAnswer.toLowerCase();
-      
+
       const [progress] = await db
         .insert(userProgress)
         .values({
@@ -56,7 +56,11 @@ export function registerRoutes(app: Express): Server {
         })
         .returning();
 
-      res.json(progress);
+      // Return both the progress and the question explanation
+      res.json({
+        ...progress,
+        explanation: question.explanation
+      });
     } catch (error) {
       res.status(500).send("Failed to submit answer");
     }

@@ -33,7 +33,7 @@ export function QuestionCard({ question, onSubmit }: QuestionCardProps) {
 
   return (
     <Card className="w-full max-w-2xl mx-auto">
-      <CardHeader className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white">
+      <CardHeader className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-t-lg">
         <div className="flex items-center justify-between">
           <span className="text-sm uppercase">{question.category}</span>
           <span className="text-sm uppercase">{question.difficulty}</span>
@@ -98,9 +98,9 @@ export function QuestionCard({ question, onSubmit }: QuestionCardProps) {
             <div className="p-4 bg-blue-50 rounded-lg">
               <div className="flex items-center gap-2 mb-2">
                 <BookOpen className="h-5 w-5 text-blue-500" />
-                <h4 className="font-medium text-blue-900">Learn More:</h4>
+                <h4 className="font-medium text-blue-900">Learn More</h4>
               </div>
-              <p className="text-sm text-blue-800 leading-relaxed">
+              <p className="text-sm text-blue-800 leading-relaxed whitespace-pre-wrap">
                 {question.explanation || "No explanation available for this question."}
               </p>
             </div>
@@ -112,7 +112,7 @@ export function QuestionCard({ question, onSubmit }: QuestionCardProps) {
         <Button 
           className="w-full ripple-button"
           onClick={handleSubmit}
-          disabled={isAnswered}
+          disabled={isAnswered || !answer}
         >
           Submit Answer
         </Button>
