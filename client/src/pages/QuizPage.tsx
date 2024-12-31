@@ -77,17 +77,6 @@ export default function QuizPage() {
           variant: 'destructive'
         });
       }
-
-      // Move to next question or end quiz
-      if (currentIndex < filteredQuestions.length - 1) {
-        setCurrentIndex(prev => prev + 1);
-      } else {
-        toast({
-          title: 'Quiz Complete! 🎉',
-          description: `Final Score: ${score} points`,
-          variant: 'default'
-        });
-      }
     } catch (error) {
       toast({
         title: 'Error',
