@@ -17,12 +17,18 @@ interface Achievement {
   description: string;
 }
 
+interface Question {
+  id: number;
+  category: string;
+  type: string;
+}
+
 interface ProgressItem {
   id: number;
+  userId: number;
+  questionId: number;
   correct: boolean;
-  question?: {
-    category: string;
-  };
+  question?: Question;
 }
 
 interface CategoryStat {
