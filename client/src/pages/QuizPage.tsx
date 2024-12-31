@@ -11,6 +11,8 @@ import type { Question, DifficultyLevel } from '@db/schema';
 export default function QuizPage() {
   const [quizStarted, setQuizStarted] = useState(false);
   const [maxQuestions, setMaxQuestions] = useState(3);
+  const [selectedCategory, setSelectedCategory] = useState<string | undefined>();
+  const [selectedDifficulty, setSelectedDifficulty] = useState<DifficultyLevel | undefined>();
   const { questions, isLoading, submitAnswer } = useQuiz();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [streak, setStreak] = useState(0);
@@ -34,15 +36,29 @@ export default function QuizPage() {
     );
   }
 
-  // Randomly select maxQuestions number of questions
-  const selectedQuestions = !quizStarted ? [] : questions
+  // Filter and randomly select maxQuestions number of questions
+  const filteredQuestions = questions.filter(q => {
+    if (selectedCategory && q.category !== selectedCategory) return false;
+    if (selectedDifficulty && q.difficulty !== selectedDifficulty) return false;
+    return true;
+  });
+
+  const selectedQuestions = !quizStarted ? [] : filteredQuestions
     .sort(() => Math.random() - 0.5)
     .slice(0, maxQuestions);
 
   const currentQuestion: Question | undefined = selectedQuestions[currentIndex];
 
-  const handleStartQuiz = (numQuestions: number) => {
-    setMaxQuestions(numQuestions);
+  const categories = Array.from(new Set(questions.map(q => q.category)));
+
+  const handleStartQuiz = (config: {
+    numQuestions: number;
+    category?: string;
+    difficulty?: DifficultyLevel;
+  }) => {
+    setMaxQuestions(config.numQuestions);
+    setSelectedCategory(config.category);
+    setSelectedDifficulty(config.difficulty);
     setQuizStarted(true);
     setCurrentIndex(0);
     setScore(0);
@@ -109,11 +125,11 @@ export default function QuizPage() {
   };
 
   if (!quizStarted) {
-    return <QuizSetup onStart={handleStartQuiz} />;
+    return <QuizSetup onStart={handleStartQuiz} categories={categories} />;
   }
 
   return (
-    <div className="max-w-4xl mx-auto py-8">
+    <div className="max-w-4xl mx-auto py-8 px-4">
       <div className="text-right mb-4">
         <span className="text-2xl font-bold text-blue-500">Score: {score}</span>
       </div>
