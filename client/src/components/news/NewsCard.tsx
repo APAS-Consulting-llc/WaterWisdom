@@ -20,7 +20,7 @@ interface NewsCardProps {
 export function NewsCard({ news, index }: NewsCardProps) {
   const shareUrl = news.url;
   const shareTitle = `📰 Interesting water sector news: ${news.title}`;
-  const shareDescription = news.summary;
+  const shareDescription = `${news.summary}\n\nPowered by WaterWisdom.AI`;
 
   return (
     <motion.div

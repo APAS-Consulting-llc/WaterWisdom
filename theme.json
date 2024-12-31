@@ -1,6 +1,8 @@
 {
   "variant": "professional",
-  "primary": "hsl(217 91% 60%)",
-  "appearance": "dark",
-  "radius": 0.75
+  "primary": "hsl(203 89% 53%)",
+  "appearance": "system",
+  "radius": 0.75,
+  "background": "linear-gradient(to bottom right, hsl(203 89% 98%), hsl(203 89% 94%))",
+  "foreground": "hsl(203 23% 24%)"
 }

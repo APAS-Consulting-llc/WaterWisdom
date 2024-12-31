@@ -22,6 +22,12 @@ export const users = pgTable("users", {
   newsletterFrequency: text("newsletter_frequency", { enum: ['daily', 'weekly', 'monthly'] }).default('weekly'),
   newsletterTopics: jsonb("newsletter_topics").default(['water treatment', 'sustainability', 'management']),
   lastNewsletterSent: timestamp("last_newsletter_sent"),
+  // News notification preferences
+  newsNotificationsEnabled: boolean("news_notifications_enabled").default(false),
+  newsDeliveryMethod: text("news_delivery_method", { enum: ['email', 'sms', 'both'] }).default('email'),
+  newsFrequency: text("news_frequency", { enum: ['hourly', 'twice_daily', 'daily'] }).default('daily'),
+  newsTopics: jsonb("news_topics").default(['water treatment', 'sustainability']),
+  lastNewsSent: timestamp("last_news_sent"),
 });
 
 export const questions = pgTable("questions", {
@@ -324,6 +330,9 @@ export type DifficultyLevel = 'beginner' | 'intermediate' | 'expert';
 export type UserRole = 'user' | 'admin';
 export type AchievementType = 'streak' | 'points' | 'category_mastery' | 'quiz_completion' | 'perfect_score' | 'path_completion';
 export type NewsletterFrequency = 'daily' | 'weekly' | 'monthly';
+export type NewsDeliveryMethod = 'email' | 'sms' | 'both';
+export type NewsFrequency = 'hourly' | 'twice_daily' | 'daily';
+
 
 // Base types
 export type User = typeof users.$inferSelect;
