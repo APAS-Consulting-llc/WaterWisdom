@@ -57,6 +57,7 @@ export default function KnowledgeBasePage() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [selectedEntry, setSelectedEntry] = useState<number | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
 
   const { isConnected, collaborators, sendEdit, updateCursor } = useCollaboration(selectedEntryId || 0);
 
@@ -73,8 +74,34 @@ export default function KnowledgeBasePage() {
   });
 
   const handleFileUpload = async (file: File, type: 'image' | 'video') => {
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    return `https://example.com/uploads/${file.name}`;
+    try {
+      setUploading(true);
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to upload file');
+      }
+
+      const data = await response.json();
+      return data.url;
+    } catch (error) {
+      console.error('File upload error:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to upload file. Please try again.',
+        variant: 'destructive',
+      });
+      throw error;
+    } finally {
+      setUploading(false);
+    }
   };
 
   const onSubmit = async (values: z.infer<typeof createEntrySchema>) => {
@@ -191,7 +218,7 @@ export default function KnowledgeBasePage() {
                           <SelectContent>
                             <SelectItem value="text">Text Only</SelectItem>
                             <SelectItem value="image">Image</SelectItem>
-                            <SelectItem value="video">Video</SelectItem>
+                            <SelectItem value="video">Video (MP4, up to 50MB)</SelectItem>
                             <SelectItem value="loom">Loom Recording</SelectItem>
                           </SelectContent>
                         </Select>
@@ -216,16 +243,29 @@ export default function KnowledgeBasePage() {
                                 onChange={async (e) => {
                                   const file = e.target.files?.[0];
                                   if (file) {
-                                    const url = await handleFileUpload(
-                                      file,
-                                      form.watch('mediaType') === 'image' ? 'image' : 'video'
-                                    );
-                                    field.onChange(url);
+                                    try {
+                                      const url = await handleFileUpload(
+                                        file,
+                                        form.watch('mediaType') === 'image' ? 'image' : 'video'
+                                      );
+                                      field.onChange(url);
+                                      toast({
+                                        title: 'Success',
+                                        description: 'File uploaded successfully!',
+                                      });
+                                    } catch (error) {
+                                      // Error is already handled in handleFileUpload
+                                    }
                                   }
                                 }}
                                 className="flex-1"
+                                disabled={uploading}
                               />
-                              <Upload className="h-4 w-4 text-muted-foreground" />
+                              {uploading ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <Upload className="h-4 w-4 text-muted-foreground" />
+                              )}
                             </div>
                           </FormControl>
                           <FormMessage />
@@ -264,7 +304,16 @@ export default function KnowledgeBasePage() {
                     )}
                   />
                   <div className="flex justify-end">
-                    <Button type="submit">Share Knowledge</Button>
+                    <Button type="submit" disabled={uploading}>
+                      {uploading ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Uploading...
+                        </>
+                      ) : (
+                        'Share Knowledge'
+                      )}
+                    </Button>
                   </div>
                 </form>
               </Form>
@@ -372,7 +421,6 @@ export default function KnowledgeBasePage() {
             </AnimatePresence>
           </div>
         </TabsContent>
-
         {CATEGORIES.map(category => (
           <TabsContent key={category.value} value={category.value} className="mt-6">
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">

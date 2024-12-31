@@ -1,23 +1,64 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { setupAuth } from "./auth";
+import multer from "multer";
+import path from "path";
 import { db } from "@db";
-import { users, userCredentials, userPublications, questions, userProgress, achievements, learningPaths, userLearningPaths, forumPosts, forumComments, forumReactions, badges, userBadges, badgeCategories, knowledgeEntries, knowledgeVotes, knowledgeRevisions, userSkills, skillEndorsements, professionalGroups, professionalConnections, groupMemberships } from "@db/schema"; // Added new tables
+import { users, knowledgeEntries, userCredentials, userPublications, questions, userProgress, achievements, learningPaths, userLearningPaths, forumPosts, forumComments, forumReactions, badges, userBadges, badgeCategories, knowledgeVotes, knowledgeRevisions, userSkills, skillEndorsements, professionalGroups, professionalConnections, groupMemberships } from "@db/schema";
 import { eq, and, count, avg, desc, sql } from "drizzle-orm";
 import CollaborationService from "./services/collaborationService";
 import { handleChatMessage } from './services/chatService';
 import { startDailyQuizScheduler } from './services/schedulerService';
 import { generateMicroLearning } from './services/microLearningService';
+import express from 'express';
+import { mkdir, existsSync } from 'fs';
+import { promisify } from 'util';
+
+const mkdirAsync = promisify(mkdir);
+
+// Configure multer for handling file uploads
+const storage = multer.diskStorage({
+  destination: "./uploads",
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+const upload = multer({
+  storage: storage,
+  limits: {
+    fileSize: 50 * 1024 * 1024, // 50MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'video/mp4', 'video/quicktime'];
+    if (allowedTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Invalid file type'));
+    }
+  }
+});
 
 export function registerRoutes(app: Express): Server {
-  // sets up /api/register, /api/login, /api/logout, /api/user
   setupAuth(app);
 
-  // Create HTTP server
-  const httpServer = createServer(app);
+  // Create uploads directory if it doesn't exist
+  if (!existsSync('./uploads')) {
+    mkdirAsync('./uploads').catch(console.error);
+  }
 
-  // Initialize WebSocket collaboration service
-  new CollaborationService(httpServer);
+  // Serve uploaded files
+  app.use('/uploads', express.static('uploads'));
+
+  // File upload endpoint
+  app.post("/api/upload", upload.single('file'), (req, res) => {
+    if (!req.file) {
+      return res.status(400).send("No file uploaded");
+    }
+    const fileUrl = `/uploads/${req.file.filename}`;
+    res.json({ url: fileUrl });
+  });
 
   // AI content generation endpoint
   app.post("/api/ai/generate-content", async (req, res) => {
@@ -1163,6 +1204,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  const httpServer = createServer(app);
   return httpServer;
 }
 
