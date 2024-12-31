@@ -32,20 +32,38 @@ Reflection Question:
 Keep the content focused on professional development in the water sector.
 Topic: `;
 
-export async function generateMicroLearning(topic?: string): Promise<string> {
+interface MicroLearningContent {
+  title: string;
+  content: string;
+  author?: string;
+  timestamp: string;
+}
+
+export async function generateMicroLearning(topic?: string): Promise<MicroLearningContent> {
   try {
     const selectedTopic = topic || INDUSTRY_TOPICS[Math.floor(Math.random() * INDUSTRY_TOPICS.length)];
     const prompt = CONTENT_PROMPT + selectedTopic;
 
-    const content = await handleChatMessage(prompt);
+    const rawContent = await handleChatMessage(prompt);
 
     // Clean up any remaining markdown artifacts
-    return content
+    const cleanContent = rawContent
       .replace(/\*\*/g, '')
       .replace(/\#\#/g, '')
       .replace(/\*/g, '')
       .replace(/\n{3,}/g, '\n\n')
       .trim();
+
+    // Extract title from content (assuming first line is title)
+    const lines = cleanContent.split('\n');
+    const title = lines[0].replace('Title:', '').trim();
+    const content = lines.slice(1).join('\n').trim();
+
+    return {
+      title,
+      content,
+      timestamp: new Date().toISOString(),
+    };
   } catch (error) {
     console.error('Error generating micro-learning content:', error);
     throw new Error('Failed to generate micro-learning content');

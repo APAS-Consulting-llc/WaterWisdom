@@ -12,9 +12,10 @@ import {
 } from 'react-share';
 
 interface MicroLearningContent {
+  title: string;
   content: string;
-  title?: string;
   author?: string;
+  timestamp: string;
 }
 
 export default function MicroLearning() {
@@ -24,21 +25,31 @@ export default function MicroLearning() {
   const { data: content, isLoading, error } = useQuery<MicroLearningContent>({
     queryKey: ['/api/micro-learning', refreshKey],
     refetchInterval: 1000 * 60 * 60, // Refetch every hour
+    retry: 1,
+    onError: (err) => {
+      toast({
+        title: 'Error loading content',
+        description: 'Failed to load learning content. Please try again later.',
+        variant: 'destructive',
+      });
+    }
   });
 
   const handleRefresh = () => {
     setRefreshKey(prev => prev + 1);
   };
 
-  const shareUrl = window.location.href;
-  const shareText = content?.content ? `${content.content.slice(0, 200)}... \n\nPowered by One Water.AI` : 'Check out this water industry insight from One Water.AI';
-  const shareTitle = 'Water Industry Insights';
+  const shareUrl = typeof window !== 'undefined' ? window.location.href : '';
+  const shareText = content ? 
+    `${content.title}\n\n${content.content.slice(0, 150)}... \n\nPowered by One Water.AI` : 
+    'Check out this water industry insight from One Water.AI';
+  const shareTitle = content?.title || 'Water Industry Insights';
 
   if (error) {
     return (
       <Card className="bg-destructive/10 border-destructive/20">
         <CardContent className="pt-6">
-          <p className="text-destructive">Failed to load micro-learning content</p>
+          <p className="text-destructive">Failed to load micro-learning content. Please refresh the page or try again later.</p>
         </CardContent>
       </Card>
     );
@@ -54,39 +65,43 @@ export default function MicroLearning() {
               Water Industry Insights
             </Badge>
           </div>
-          <div className="flex gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleRefresh}
-              disabled={isLoading}
-            >
-              <RefreshCw className="h-4 w-4" />
-            </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleRefresh}
+            disabled={isLoading}
+          >
+            <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+          </Button>
+        </div>
+
+        {/* Share section only shows when content is loaded */}
+        {content && (
+          <div className="flex gap-2 mt-4">
+            <TwitterShareButton url={shareUrl} title={shareText}>
+              <Button variant="outline" size="sm" className="gap-2">
+                <Twitter className="h-4 w-4" />
+                Share on Twitter
+              </Button>
+            </TwitterShareButton>
+
+            <LinkedinShareButton url={shareUrl} title={shareTitle} summary={shareText}>
+              <Button variant="outline" size="sm" className="gap-2">
+                <Linkedin className="h-4 w-4" />
+                Share on LinkedIn
+              </Button>
+            </LinkedinShareButton>
+
+            <FacebookShareButton url={shareUrl} hashtag="#OneWaterAI">
+              <Button variant="outline" size="sm" className="gap-2">
+                <Facebook className="h-4 w-4" />
+                Share on Facebook
+              </Button>
+            </FacebookShareButton>
           </div>
-        </div>
-        {/* Social Share Buttons */}
-        <div className="flex gap-2 mt-4">
-          <TwitterShareButton url={shareUrl} title={shareText}>
-            <Button variant="outline" size="sm" className="gap-2">
-              <Twitter className="h-4 w-4" />
-              Share on Twitter
-            </Button>
-          </TwitterShareButton>
-          <LinkedinShareButton url={shareUrl} title={shareTitle} summary={shareText}>
-            <Button variant="outline" size="sm" className="gap-2">
-              <Linkedin className="h-4 w-4" />
-              Share on LinkedIn
-            </Button>
-          </LinkedinShareButton>
-          <FacebookShareButton url={shareUrl} hashtag="#OneWaterAI">
-            <Button variant="outline" size="sm" className="gap-2">
-              <Facebook className="h-4 w-4" />
-              Share on Facebook
-            </Button>
-          </FacebookShareButton>
-        </div>
+        )}
       </CardHeader>
+
       <CardContent>
         {isLoading ? (
           <div className="flex justify-center py-8">
@@ -94,14 +109,26 @@ export default function MicroLearning() {
           </div>
         ) : content ? (
           <div className="prose prose-slate dark:prose-invert max-w-none">
+            <h2 className="text-xl font-semibold mb-4">{content.title}</h2>
             {content.content.split('\n\n').map((section, index) => (
               <p key={index} className="mb-4">{section}</p>
             ))}
           </div>
         ) : (
-          <p>No content available</p>
+          <div className="py-8 text-center text-muted-foreground">
+            <p>No content available</p>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleRefresh} 
+              className="mt-4"
+            >
+              Try Again
+            </Button>
+          </div>
         )}
       </CardContent>
+
       <CardFooter className="text-sm text-muted-foreground flex justify-between items-center">
         <p>Updated hourly</p>
         <p className="font-medium">Powered by One Water.AI</p>
