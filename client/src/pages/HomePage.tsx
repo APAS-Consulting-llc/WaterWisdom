@@ -5,9 +5,12 @@ import { useUser } from '@/hooks/use-user';
 import { Droplets, Building2, Sparkles, Book, Users, Brain, Briefcase, GraduationCap, Trophy } from 'lucide-react';
 import DelphiProfile from '@/components/profile/DelphiProfile';
 import MicroLearning from '@/components/learning/MicroLearning';
+import { SkillRadar, type Skill } from '@/components/profile/SkillRadar';
 import { motion } from 'framer-motion';
 import { AvatarScroll } from '@/components/profile/AvatarScroll';
+import { Badge } from '@/components/ui/badge';
 
+// Animation variants...
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
@@ -49,6 +52,15 @@ const QuickActionCard = ({ icon: Icon, title, description, href }) => (
 
 export default function HomePage() {
   const { user } = useUser();
+
+  // Sample skill data - in a real app, this would come from an API
+  const sampleSkills: Skill[] = [
+    { subject: "Water Treatment", level: 85, fullMark: 100 },
+    { subject: "Quality Control", level: 75, fullMark: 100 },
+    { subject: "Sustainability", level: 90, fullMark: 100 },
+    { subject: "Regulations", level: 70, fullMark: 100 },
+    { subject: "Innovation", level: 80, fullMark: 100 },
+  ];
 
   return (
     <motion.div 
@@ -179,6 +191,58 @@ export default function HomePage() {
 
       {user && (
         <>
+          {/* Skills and Progress Section */}
+          <motion.section 
+            variants={itemVariants}
+            className="py-16 px-4"
+          >
+            <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-8">
+              {/* Skills Radar Chart */}
+              <SkillRadar skills={sampleSkills} className="bg-white/90 backdrop-blur" />
+
+              {/* Progress Widget */}
+              <Card className="bg-white/90 backdrop-blur">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Trophy className="h-5 w-5" />
+                    Your Progress
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="p-4 bg-primary/5 rounded-lg">
+                      <h4 className="font-medium mb-2">Recent Achievements</h4>
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span>Completed Water Quality Course</span>
+                          <Badge variant="secondary">+50 XP</Badge>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span>Quiz Master: Treatment Processes</span>
+                          <Badge variant="secondary">+30 XP</Badge>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="p-4 bg-primary/5 rounded-lg">
+                      <h4 className="font-medium mb-2">Next Goals</h4>
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span>Complete Sustainability Module</span>
+                          <Button variant="outline" size="sm">Start</Button>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span>Take Advanced Treatment Quiz</span>
+                          <Button variant="outline" size="sm">Begin</Button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </motion.section>
+
+          {/* Engage with Industry Experts */}
           <motion.section 
             variants={itemVariants}
             className="py-16 px-4"
@@ -194,6 +258,7 @@ export default function HomePage() {
             </div>
           </motion.section>
 
+          {/* Delphi Profile */}
           <motion.section 
             variants={itemVariants}
             className="py-16 px-4"
@@ -203,6 +268,7 @@ export default function HomePage() {
             </div>
           </motion.section>
 
+          {/* Today's Learning */}
           <motion.section 
             variants={itemVariants}
             className="py-16 px-4 bg-white/30 backdrop-blur-sm"
@@ -218,6 +284,7 @@ export default function HomePage() {
         </>
       )}
 
+      {/* Resources Section */}
       <motion.section 
         variants={itemVariants}
         className="py-16 px-4"
