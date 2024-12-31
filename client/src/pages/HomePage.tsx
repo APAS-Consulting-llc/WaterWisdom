@@ -4,6 +4,7 @@ import { Link } from 'wouter';
 import { useUser } from '@/hooks/use-user';
 import { Droplets } from 'lucide-react';
 import DelphiProfile from '@/components/profile/DelphiProfile';
+import MicroLearning from '@/components/learning/MicroLearning';
 
 export default function HomePage() {
   const { user } = useUser();
@@ -11,6 +12,7 @@ export default function HomePage() {
   return (
     <div className="max-w-4xl mx-auto py-8 px-4">
       {user && <DelphiProfile />}
+      {user && <div className="mb-8"><MicroLearning /></div>}
       <Card className="mb-8">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">

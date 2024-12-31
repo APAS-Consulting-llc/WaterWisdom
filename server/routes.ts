@@ -6,6 +6,7 @@ import { questions, userProgress, achievements, users, learningPaths, userLearni
 import { eq, and, count, avg, desc } from "drizzle-orm";
 import { startDailyQuizScheduler } from './services/schedulerService';
 import { handleChatMessage } from './services/chatService';
+import { generateMicroLearning } from './services/microLearningService';
 
 type DifficultyLevel = 'beginner' | 'intermediate' | 'expert';
 
@@ -641,6 +642,17 @@ export function registerRoutes(app: Express): Server {
     } catch (error) {
       console.error("Error fetching news:", error);
       res.status(500).send("Failed to fetch news");
+    }
+  });
+
+  // Add micro-learning endpoint
+  app.get("/api/micro-learning", async (req, res) => {
+    try {
+      const content = await generateMicroLearning();
+      res.json(content);
+    } catch (error) {
+      console.error('Micro-learning endpoint error:', error);
+      res.status(500).send("Failed to generate micro-learning content");
     }
   });
 
