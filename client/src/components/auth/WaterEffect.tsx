@@ -52,24 +52,48 @@ export default function WaterEffect() {
       mouseX.set(x);
       mouseY.set(y);
 
-      // Add new ripple point
+      // Add new ripple point with increased initial strength
       pointsRef.current.push({
         x,
         y,
         radius: 0,
-        strength: 1,
+        strength: 1.5, // Increased from 1 to 1.5
         life: 1
       });
     };
 
+    // Handle click with stronger effect
+    const handleClick = (e: MouseEvent | TouchEvent) => {
+      const rect = canvas.getBoundingClientRect();
+      const x = 'touches' in e 
+        ? e.touches[0].clientX - rect.left 
+        : e.clientX - rect.left;
+      const y = 'touches' in e 
+        ? e.touches[0].clientY - rect.top 
+        : e.clientY - rect.top;
+
+      // Add multiple ripple points for a stronger splash effect
+      for (let i = 0; i < 3; i++) {
+        pointsRef.current.push({
+          x: x + (Math.random() - 0.5) * 20,
+          y: y + (Math.random() - 0.5) * 20,
+          radius: Math.random() * 10,
+          strength: 2, // Stronger effect for clicks
+          life: 1
+        });
+      }
+    };
+
     canvas.addEventListener('mousemove', handleMove);
     canvas.addEventListener('touchmove', handleMove);
-    canvas.addEventListener('click', handleMove);
+    canvas.addEventListener('click', handleClick);
+    canvas.addEventListener('touchstart', handleClick);
 
     return () => {
       canvas.removeEventListener('mousemove', handleMove);
       canvas.removeEventListener('touchmove', handleMove);
-      canvas.removeEventListener('click', handleMove);
+      canvas.removeEventListener('click', handleClick);
+      canvas.removeEventListener('touchstart', handleClick);
     };
   }, []);
 
@@ -90,7 +114,7 @@ export default function WaterEffect() {
       // Clear canvas
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // Update and draw ripples
+      // Update and draw ripples with enhanced visual effect
       pointsRef.current = pointsRef.current.filter(point => {
         point.radius += 5;
         point.life -= 0.02;
@@ -98,12 +122,13 @@ export default function WaterEffect() {
 
         if (point.life <= 0) return false;
 
-        // Draw ripple
+        // Enhanced ripple effect with more prominent glow
         const gradient = ctx.createRadialGradient(
           point.x, point.y, 0,
           point.x, point.y, point.radius
         );
-        gradient.addColorStop(0, `rgba(255, 255, 255, 0)`);
+        gradient.addColorStop(0, `rgba(255, 255, 255, ${0.1 * point.life * point.strength})`);
+        gradient.addColorStop(0.4, `rgba(77, 155, 230, ${0.3 * point.life * point.strength})`);
         gradient.addColorStop(0.7, `rgba(77, 155, 230, ${0.2 * point.life * point.strength})`);
         gradient.addColorStop(1, `rgba(77, 155, 230, 0)`);
 
@@ -115,15 +140,30 @@ export default function WaterEffect() {
         return true;
       });
 
-      // Draw cursor trail
+      // Draw enhanced cursor trail with larger, more visible effect
       const x = springX.get();
       const y = springY.get();
-      const gradient = ctx.createRadialGradient(x, y, 0, x, y, 100);
-      gradient.addColorStop(0, 'rgba(77, 155, 230, 0.2)');
-      gradient.addColorStop(1, 'rgba(77, 155, 230, 0)');
+
+      // Main cursor glow
+      const cursorGradient = ctx.createRadialGradient(x, y, 0, x, y, 150);
+      cursorGradient.addColorStop(0, 'rgba(77, 155, 230, 0.3)');
+      cursorGradient.addColorStop(0.3, 'rgba(77, 155, 230, 0.2)');
+      cursorGradient.addColorStop(0.7, 'rgba(77, 155, 230, 0.1)');
+      cursorGradient.addColorStop(1, 'rgba(77, 155, 230, 0)');
+
       ctx.beginPath();
-      ctx.arc(x, y, 100, 0, Math.PI * 2);
-      ctx.fillStyle = gradient;
+      ctx.arc(x, y, 150, 0, Math.PI * 2);
+      ctx.fillStyle = cursorGradient;
+      ctx.fill();
+
+      // Inner cursor highlight
+      const innerGradient = ctx.createRadialGradient(x, y, 0, x, y, 30);
+      innerGradient.addColorStop(0, 'rgba(255, 255, 255, 0.4)');
+      innerGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+
+      ctx.beginPath();
+      ctx.arc(x, y, 30, 0, Math.PI * 2);
+      ctx.fillStyle = innerGradient;
       ctx.fill();
 
       previousTimeRef.current = time;
