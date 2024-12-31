@@ -17,11 +17,13 @@ import {
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
-import { Bell, BellOff } from "lucide-react";
+import { Bell, BellOff, Clock } from "lucide-react";
 
 const formSchema = z.object({
   phoneNumber: z.string().min(10, "Phone number must be at least 10 digits"),
   enabled: z.boolean(),
+  preferredQuizTime: z.string().regex(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/, "Invalid time format (HH:mm)"),
+  timezone: z.string(),
 });
 
 export default function SettingsPage() {
@@ -34,6 +36,8 @@ export default function SettingsPage() {
     defaultValues: {
       phoneNumber: user?.phoneNumber || "",
       enabled: user?.smsNotificationsEnabled || false,
+      preferredQuizTime: user?.preferredQuizTime || "10:00",
+      timezone: user?.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone,
     },
   });
 
@@ -88,7 +92,7 @@ export default function SettingsPage() {
         <div>
           <h3 className="text-lg font-medium">Quiz SMS Notifications</h3>
           <p className="text-sm text-gray-500">
-            Receive daily water quiz questions via SMS. Questions will be sent at 10:00 AM.
+            Receive daily water quiz questions via SMS at your preferred time.
           </p>
         </div>
 
@@ -113,6 +117,29 @@ export default function SettingsPage() {
 
             <FormField
               control={form.control}
+              name="preferredQuizTime"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Preferred Quiz Time</FormLabel>
+                  <FormControl>
+                    <div className="flex items-center space-x-2">
+                      <Clock className="w-4 h-4 text-muted-foreground" />
+                      <Input
+                        type="time"
+                        {...field}
+                      />
+                    </div>
+                  </FormControl>
+                  <FormDescription>
+                    Choose when you'd like to receive your daily quiz (24-hour format).
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
               name="enabled"
               render={({ field }) => (
                 <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
@@ -121,7 +148,7 @@ export default function SettingsPage() {
                       Enable Daily Quiz Notifications
                     </FormLabel>
                     <FormDescription>
-                      Get a daily water quiz question delivered to your phone at 10:00 AM.
+                      Get a daily water quiz question delivered to your phone at your preferred time.
                     </FormDescription>
                   </div>
                   <FormControl>

@@ -12,6 +12,8 @@ export const users = pgTable("users", {
   streak: integer("streak").notNull().default(0),
   phoneNumber: text("phone_number"),
   smsNotificationsEnabled: boolean("sms_notifications_enabled").default(false),
+  preferredQuizTime: text("preferred_quiz_time").default('10:00'), // Store time in 24-hour format
+  timezone: text("timezone").default('UTC'),
   lastNotificationSent: timestamp("last_notification_sent"),
   lastActiveAt: timestamp("last_active_at").defaultNow(),
   createdAt: timestamp("created_at").defaultNow(),

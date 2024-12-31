@@ -5,17 +5,20 @@ import { eq } from 'drizzle-orm';
 import { sendSMS, formatQuizMessage } from './smsService';
 
 export function startDailyQuizScheduler() {
-  // Schedule job to run every day at 10:00 AM
-  schedule.scheduleJob('0 10 * * *', async () => {
+  // Check every minute for users who should receive quizzes
+  schedule.scheduleJob('* * * * *', async () => {
     try {
-      // Get all users with phone numbers and SMS notifications enabled
-      const usersWithPhone = await db
+      const now = new Date();
+      const currentTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+
+      // Get all users with notifications enabled and whose preferred time matches current time
+      const usersToNotify = await db
         .select()
         .from(users)
-        .where(eq(users.smsNotificationsEnabled, true));
+        .where(eq(users.smsNotificationsEnabled, true))
+        .where(eq(users.preferredQuizTime, currentTime));
 
-      if (!usersWithPhone.length) {
-        console.log('No users subscribed to SMS notifications');
+      if (!usersToNotify.length) {
         return;
       }
 
@@ -39,8 +42,8 @@ export function startDailyQuizScheduler() {
         type: randomQuestion.type
       });
 
-      // Send SMS to each subscribed user
-      const smsPromises = usersWithPhone.map(user => 
+      // Send SMS to each user who should receive it now
+      const smsPromises = usersToNotify.map(user => 
         sendSMS(user.phoneNumber!, message)
           .catch(error => {
             console.error(`Failed to send SMS to ${user.phoneNumber}:`, error);
@@ -49,20 +52,20 @@ export function startDailyQuizScheduler() {
       );
 
       await Promise.all(smsPromises);
-      console.log(`Daily quiz sent to ${usersWithPhone.length} users`);
+      console.log(`Daily quiz sent to ${usersToNotify.length} users at ${currentTime}`);
 
-      // Update last notification sent timestamp for users
+      // Update last notification sent timestamp for notified users
       await db
         .update(users)
         .set({
-          lastNotificationSent: new Date(),
+          lastNotificationSent: now,
         })
-        .where(eq(users.smsNotificationsEnabled, true));
+        .where(eq(users.id, usersToNotify.map(user => user.id)));
 
     } catch (error) {
       console.error('Error in daily quiz scheduler:', error);
     }
   });
 
-  console.log('Daily quiz scheduler started');
+  console.log('Daily quiz scheduler started with personalized timing');
 }
