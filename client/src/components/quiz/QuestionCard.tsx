@@ -8,6 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { ShareButtons } from '@/components/ui/ShareButtons';
 import { Badge } from '@/components/ui/Badge';
 import { useContributor } from '@/hooks/use-contributor';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   BeakerIcon, 
   Droplets, 
@@ -17,7 +18,8 @@ import {
   AlertCircle, 
   CheckCircle2, 
   BookOpen,
-  Loader2
+  Loader2,
+  Sparkles
 } from 'lucide-react';
 import type { Question } from '@db/schema';
 
@@ -34,15 +36,18 @@ const iconMap: Record<string, any> = {
   GraduationCap,
 };
 
+const confettiColors = ['#FFD700', '#87CEEB', '#98FB98', '#DDA0DD', '#F0E68C'];
+
 export function QuestionCard({ question, onSubmit }: QuestionCardProps) {
   const [answer, setAnswer] = useState('');
   const [isAnswered, setIsAnswered] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
   const { toast } = useToast();
   const shareUrl = typeof window !== 'undefined' ? window.location.href : '';
 
   const { data: contributorData, isLoading: isLoadingContributor } = useContributor(question.createdBy || 0);
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!answer) {
       toast({
         title: 'Error',
@@ -52,11 +57,46 @@ export function QuestionCard({ question, onSubmit }: QuestionCardProps) {
       return;
     }
     setIsAnswered(true);
-    onSubmit(answer);
+    const result = await onSubmit(answer);
+    if (result?.correct) {
+      setShowConfetti(true);
+      setTimeout(() => setShowConfetti(false), 3000);
+    }
   };
 
   return (
-    <Card className="w-full max-w-2xl mx-auto">
+    <Card className="w-full max-w-2xl mx-auto relative overflow-hidden">
+      {showConfetti && (
+        <motion.div
+          className="absolute inset-0 pointer-events-none"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+        >
+          {Array.from({ length: 50 }).map((_, i) => (
+            <motion.div
+              key={i}
+              className="absolute w-2 h-2 rounded-full"
+              style={{
+                background: confettiColors[i % confettiColors.length],
+                left: `${Math.random() * 100}%`,
+                top: -10,
+              }}
+              animate={{
+                y: ['0vh', '100vh'],
+                x: [0, (Math.random() - 0.5) * 200],
+                rotate: [0, Math.random() * 360],
+              }}
+              transition={{
+                duration: Math.random() * 2 + 1,
+                ease: 'easeOut',
+                delay: Math.random() * 0.5,
+              }}
+            />
+          ))}
+        </motion.div>
+      )}
+
       <CardHeader className="bg-gradient-radial from-blue-500/20 via-cyan-500/20 to-transparent text-white rounded-t-lg">
         <div className="flex items-center justify-between mb-4">
           <div>
@@ -65,9 +105,15 @@ export function QuestionCard({ question, onSubmit }: QuestionCardProps) {
             <span className="text-sm uppercase">{question.difficulty}</span>
           </div>
         </div>
-        <h2 className="text-xl font-semibold mb-4">{question.question}</h2>
+        <motion.h2 
+          className="text-xl font-semibold mb-4"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          {question.question}
+        </motion.h2>
 
-        {/* Contributor info with badges */}
         <div className="bg-white/10 rounded-lg p-4">
           <div className="mb-3">
             <h3 className="text-sm font-medium text-white">Contributed by:</h3>
@@ -77,22 +123,33 @@ export function QuestionCard({ question, onSubmit }: QuestionCardProps) {
                 <span>Loading contributor info...</span>
               </div>
             ) : contributorData ? (
-              <div className="flex items-center gap-2 mt-1">
+              <motion.div 
+                className="flex items-center gap-2 mt-1"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.5 }}
+              >
                 <span className="font-medium">{contributorData.contributor.username}</span>
                 <div className="flex gap-1">
                   {contributorData.badges.map((badge: any, index: number) => {
                     const Icon = iconMap[badge.badge.icon];
                     return (
-                      <Badge
+                      <motion.div
                         key={index}
-                        name={badge.badge.name}
-                        icon={Icon}
-                        color={badge.badge.color}
-                      />
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ delay: index * 0.1 }}
+                      >
+                        <Badge
+                          name={badge.badge.name}
+                          icon={Icon}
+                          color={badge.badge.color}
+                        />
+                      </motion.div>
                     );
                   })}
                 </div>
-              </div>
+              </motion.div>
             ) : null}
           </div>
 
@@ -108,75 +165,143 @@ export function QuestionCard({ question, onSubmit }: QuestionCardProps) {
       </CardHeader>
 
       <CardContent className="pt-6">
-        {question.type === 'multiple_choice' && question.options && (
-          <RadioGroup onValueChange={setAnswer} value={answer} disabled={isAnswered}>
-            {(question.options as string[]).map((option, index) => (
-              <div key={index} className="flex items-center space-x-2 p-2">
-                <RadioGroupItem id={`option-${index}`} value={option} />
-                <Label htmlFor={`option-${index}`}>{option}</Label>
-              </div>
-            ))}
-          </RadioGroup>
-        )}
+        <AnimatePresence mode="wait">
+          {!isAnswered ? (
+            <motion.div
+              key="question"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+            >
+              {question.type === 'multiple_choice' && question.options && (
+                <RadioGroup onValueChange={setAnswer} value={answer}>
+                  {(question.options as string[]).map((option, index) => (
+                    <motion.div 
+                      key={index}
+                      className="flex items-center space-x-2 p-2"
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                    >
+                      <RadioGroupItem id={`option-${index}`} value={option} />
+                      <Label htmlFor={`option-${index}`}>{option}</Label>
+                    </motion.div>
+                  ))}
+                </RadioGroup>
+              )}
 
-        {question.type === 'true_false' && (
-          <RadioGroup onValueChange={setAnswer} value={answer} disabled={isAnswered}>
-            <div className="flex items-center space-x-2 p-2">
-              <RadioGroupItem id="true" value="true" />
-              <Label htmlFor="true">True</Label>
-            </div>
-            <div className="flex items-center space-x-2 p-2">
-              <RadioGroupItem id="false" value="false" />
-              <Label htmlFor="false">False</Label>
-            </div>
-          </RadioGroup>
-        )}
+              {question.type === 'true_false' && (
+                <RadioGroup onValueChange={setAnswer} value={answer}>
+                  <motion.div 
+                    className="flex items-center space-x-2 p-2"
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                  >
+                    <RadioGroupItem id="true" value="true" />
+                    <Label htmlFor="true">True</Label>
+                  </motion.div>
+                  <motion.div 
+                    className="flex items-center space-x-2 p-2"
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.1 }}
+                  >
+                    <RadioGroupItem id="false" value="false" />
+                    <Label htmlFor="false">False</Label>
+                  </motion.div>
+                </RadioGroup>
+              )}
 
-        {question.type === 'short_answer' && (
-          <Input
-            placeholder="Enter your answer"
-            value={answer}
-            onChange={(e) => setAnswer(e.target.value)}
-            disabled={isAnswered}
-          />
-        )}
+              {question.type === 'short_answer' && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                >
+                  <Input
+                    placeholder="Enter your answer"
+                    value={answer}
+                    onChange={(e) => setAnswer(e.target.value)}
+                  />
+                </motion.div>
+              )}
+            </motion.div>
+          ) : (
+            <motion.div
+              key="result"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="space-y-4"
+            >
+              <motion.div 
+                className={`p-4 rounded-lg ${answer.toLowerCase() === question.correctAnswer.toLowerCase() ? 'bg-green-50' : 'bg-red-50'}`}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+              >
+                <div className="flex items-start gap-3">
+                  {answer.toLowerCase() === question.correctAnswer.toLowerCase() ? (
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ type: "spring", stiffness: 200 }}
+                    >
+                      <CheckCircle2 className="h-5 w-5 text-green-500 mt-0.5" />
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ type: "spring", stiffness: 200 }}
+                    >
+                      <AlertCircle className="h-5 w-5 text-red-500 mt-0.5" />
+                    </motion.div>
+                  )}
+                  <div>
+                    <h3 className={`font-semibold ${answer.toLowerCase() === question.correctAnswer.toLowerCase() ? 'text-green-700' : 'text-red-700'}`}>
+                      {answer.toLowerCase() === question.correctAnswer.toLowerCase() ? (
+                        <motion.span
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ delay: 0.2 }}
+                          className="flex items-center gap-2"
+                        >
+                          Correct Answer! <Sparkles className="h-4 w-4" />
+                        </motion.span>
+                      ) : 'Incorrect Answer'}
+                    </h3>
+                    <motion.p 
+                      className="text-sm mt-1"
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.3 }}
+                    >
+                      The correct answer is: <span className="font-medium">{question.correctAnswer}</span>
+                    </motion.p>
+                  </div>
+                </div>
+              </motion.div>
 
-        {isAnswered && (
-          <div className="mt-6 space-y-4">
-            <div className={`p-4 rounded-lg ${answer.toLowerCase() === question.correctAnswer.toLowerCase() ? 'bg-green-50' : 'bg-red-50'}`}>
-              <div className="flex items-start gap-3">
-                {answer.toLowerCase() === question.correctAnswer.toLowerCase() ? (
-                  <CheckCircle2 className="h-5 w-5 text-green-500 mt-0.5" />
-                ) : (
-                  <AlertCircle className="h-5 w-5 text-red-500 mt-0.5" />
-                )}
-                <div>
-                  <h3 className={`font-semibold ${answer.toLowerCase() === question.correctAnswer.toLowerCase() ? 'text-green-700' : 'text-red-700'}`}>
-                    {answer.toLowerCase() === question.correctAnswer.toLowerCase() ? 'Correct Answer!' : 'Incorrect Answer'}
-                  </h3>
-                  <p className="text-sm mt-1">
-                    The correct answer is: <span className="font-medium">{question.correctAnswer}</span>
+              {question.explanation && (
+                <motion.div 
+                  className="p-4 bg-blue-50 rounded-lg"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4 }}
+                >
+                  <div className="flex items-center gap-2 mb-2">
+                    <BookOpen className="h-5 w-5 text-blue-500" />
+                    <h4 className="font-medium text-blue-900">Learn More</h4>
+                  </div>
+                  <p className="text-sm text-blue-800 leading-relaxed whitespace-pre-wrap">
+                    {question.explanation}
                   </p>
-                </div>
-              </div>
-            </div>
-
-            {question.explanation && (
-              <div className="p-4 bg-blue-50 rounded-lg">
-                <div className="flex items-center gap-2 mb-2">
-                  <BookOpen className="h-5 w-5 text-blue-500" />
-                  <h4 className="font-medium text-blue-900">Learn More</h4>
-                </div>
-                <p className="text-sm text-blue-800 leading-relaxed whitespace-pre-wrap">
-                  {question.explanation}
-                </p>
-                <p className="text-xs text-blue-600 mt-4 italic">
-                  Question contributed by {contributorData ? contributorData.contributor.username : 'Unknown'} • Powered by Water.AI - All rights reserved 2024
-                </p>
-              </div>
-            )}
-          </div>
-        )}
+                  <p className="text-xs text-blue-600 mt-4 italic">
+                    Question contributed by {contributorData ? contributorData.contributor.username : 'Unknown'} • Powered by Water.AI - All rights reserved 2024
+                  </p>
+                </motion.div>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </CardContent>
 
       <CardFooter>
