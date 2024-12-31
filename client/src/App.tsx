@@ -1,9 +1,11 @@
 import { Switch, Route } from 'wouter';
 import { useUser } from './hooks/use-user';
 import AuthPage from './pages/AuthPage';
+import HomePage from './pages/HomePage';
 import QuizPage from './pages/QuizPage';
 import AdminPage from './pages/AdminPage';
 import ProfilePage from './pages/ProfilePage';
+import SubmitQuestionPage from './pages/SubmitQuestionPage';
 import { Navigation } from './components/layout/Navigation';
 import { Loader2 } from 'lucide-react';
 import './styles/animations.css';
@@ -28,9 +30,10 @@ function App() {
       <Navigation />
       <main className="container mx-auto px-4 py-8">
         <Switch>
-          <Route path="/" component={QuizPage} />
+          <Route path="/" component={HomePage} />
           <Route path="/quiz" component={QuizPage} />
           <Route path="/profile" component={ProfilePage} />
+          <Route path="/submit-question" component={SubmitQuestionPage} />
           {user.role === 'admin' && (
             <Route path="/admin" component={AdminPage} />
           )}
