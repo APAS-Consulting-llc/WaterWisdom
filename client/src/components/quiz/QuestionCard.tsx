@@ -9,14 +9,14 @@ import { ShareButtons } from '@/components/ui/ShareButtons';
 import { Badge } from '@/components/ui/Badge';
 import { useContributor } from '@/hooks/use-contributor';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  BeakerIcon, 
-  Droplets, 
-  ShieldCheck, 
-  Lightbulb, 
+import {
+  BeakerIcon,
+  Droplets,
+  ShieldCheck,
+  Lightbulb,
   GraduationCap,
-  AlertCircle, 
-  CheckCircle2, 
+  AlertCircle,
+  CheckCircle2,
   BookOpen,
   Loader2,
   Sparkles
@@ -105,7 +105,7 @@ export function QuestionCard({ question, onSubmit }: QuestionCardProps) {
             <span className="text-sm uppercase">{question.difficulty}</span>
           </div>
         </div>
-        <motion.h2 
+        <motion.h2
           className="text-xl font-semibold mb-4"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -123,7 +123,7 @@ export function QuestionCard({ question, onSubmit }: QuestionCardProps) {
                 <span>Loading contributor info...</span>
               </div>
             ) : contributorData ? (
-              <motion.div 
+              <motion.div
                 className="flex items-center gap-2 mt-1"
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -155,10 +155,10 @@ export function QuestionCard({ question, onSubmit }: QuestionCardProps) {
 
           <div className="mt-4">
             <h3 className="text-sm font-medium mb-2">Share this question:</h3>
-            <ShareButtons 
+            <ShareButtons
               url={shareUrl}
-              title={`🌊 ONE WATER HUB Quiz: ${question.question}`}
-              description={`Test your water sector knowledge! Join me in learning about ${question.category} at ONE WATER HUB`}
+              title={`🌊 One Water.AI Quiz: ${question.question}`}
+              description={`Test your water sector knowledge! Join me in learning about ${question.category} at One Water.AI`}
             />
           </div>
         </div>
@@ -176,7 +176,7 @@ export function QuestionCard({ question, onSubmit }: QuestionCardProps) {
               {question.type === 'multiple_choice' && question.options && (
                 <RadioGroup onValueChange={setAnswer} value={answer}>
                   {(question.options as string[]).map((option, index) => (
-                    <motion.div 
+                    <motion.div
                       key={index}
                       className="flex items-center space-x-2 p-2"
                       initial={{ opacity: 0, x: -20 }}
@@ -192,7 +192,7 @@ export function QuestionCard({ question, onSubmit }: QuestionCardProps) {
 
               {question.type === 'true_false' && (
                 <RadioGroup onValueChange={setAnswer} value={answer}>
-                  <motion.div 
+                  <motion.div
                     className="flex items-center space-x-2 p-2"
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
@@ -200,7 +200,7 @@ export function QuestionCard({ question, onSubmit }: QuestionCardProps) {
                     <RadioGroupItem id="true" value="true" />
                     <Label htmlFor="true">True</Label>
                   </motion.div>
-                  <motion.div 
+                  <motion.div
                     className="flex items-center space-x-2 p-2"
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
@@ -232,7 +232,7 @@ export function QuestionCard({ question, onSubmit }: QuestionCardProps) {
               animate={{ opacity: 1, scale: 1 }}
               className="space-y-4"
             >
-              <motion.div 
+              <motion.div
                 className={`p-4 rounded-lg ${answer.toLowerCase() === question.correctAnswer.toLowerCase() ? 'bg-green-50' : 'bg-red-50'}`}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -268,7 +268,7 @@ export function QuestionCard({ question, onSubmit }: QuestionCardProps) {
                         </motion.span>
                       ) : 'Incorrect Answer'}
                     </h3>
-                    <motion.p 
+                    <motion.p
                       className="text-sm mt-1"
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
@@ -281,7 +281,7 @@ export function QuestionCard({ question, onSubmit }: QuestionCardProps) {
               </motion.div>
 
               {question.explanation && (
-                <motion.div 
+                <motion.div
                   className="p-4 bg-blue-50 rounded-lg"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -295,7 +295,7 @@ export function QuestionCard({ question, onSubmit }: QuestionCardProps) {
                     {question.explanation}
                   </p>
                   <p className="text-xs text-blue-600 mt-4 italic">
-                    Question contributed by {contributorData ? contributorData.contributor.username : 'Unknown'} • Powered by ONE WATER HUB - All rights reserved 2024
+                    Question contributed by {contributorData ? contributorData.contributor.username : 'Unknown'} • Powered by One Water.AI - All rights reserved 2024
                   </p>
                 </motion.div>
               )}
@@ -305,7 +305,7 @@ export function QuestionCard({ question, onSubmit }: QuestionCardProps) {
       </CardContent>
 
       <CardFooter>
-        <Button 
+        <Button
           className="w-full ripple-button"
           onClick={handleSubmit}
           disabled={isAnswered || !answer}

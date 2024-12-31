@@ -32,7 +32,7 @@ export default function MicroLearning() {
   };
 
   const shareUrl = window.location.href;
-  const shareText = content ? `${content.content.substring(0, 200)}... \n\nPowered by ONE WATER HUB` : '';
+  const shareText = content ? `${content.content.substring(0, 200)}... \n\nPowered by One Water.AI` : '';
   const shareTitle = 'Water Industry Insights';
 
   if (error) {
@@ -113,7 +113,7 @@ export default function MicroLearning() {
           </CardContent>
           <CardFooter className="text-sm text-muted-foreground flex justify-between items-center">
             <p>Updated hourly</p>
-            <p className="font-medium">Powered by ONE WATER HUB</p>
+            <p className="font-medium">Powered by One Water.AI</p>
           </CardFooter>
         </Card>
       </motion.div>

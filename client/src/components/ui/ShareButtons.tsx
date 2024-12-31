@@ -16,7 +16,7 @@ interface ShareButtonsProps {
 export function ShareButtons({ url, title, description }: ShareButtonsProps) {
   return (
     <div className="flex gap-3 items-center py-2">
-      <FacebookShareButton url={url} hashtag="#OneWaterHub">
+      <FacebookShareButton url={url} hashtag="#OneWaterAI">
         <FacebookIcon size={32} round />
       </FacebookShareButton>
 
@@ -24,7 +24,7 @@ export function ShareButtons({ url, title, description }: ShareButtonsProps) {
         url={url} 
         title={title} 
         summary={description}
-        source="ONE WATER HUB"
+        source="One Water.AI"
       >
         <LinkedinIcon size={32} round />
       </LinkedinShareButton>
