@@ -34,6 +34,8 @@ const skillsData = [
   { subject: 'Innovation', level: 80, fullMark: 100 },
 ];
 
+const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
+
 export default function ProfilePage() {
   const { user } = useUser();
 
@@ -73,8 +75,6 @@ export default function ProfilePage() {
     value: stats.total,
   }));
 
-  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
-
   const shareUrl = typeof window !== 'undefined' ? window.location.href : '';
   const shareTitle = `Check out my Water.AI profile! ${accuracy.toFixed(1)}% accuracy across ${totalQuestions} questions 💧`;
   const shareDescription = `I'm mastering water sector skills on Water.AI! Join me in making a difference in water management and sustainability.`;
@@ -82,7 +82,7 @@ export default function ProfilePage() {
   return (
     <div className="max-w-6xl mx-auto py-8 px-4">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold scale-heading">Professional Profile</h1>
+        <h1 className="text-3xl font-bold">Professional Profile</h1>
         <ShareButtons 
           url={shareUrl}
           title={shareTitle}
@@ -140,13 +140,8 @@ export default function ProfilePage() {
           </Card>
 
           <ResumeGenerator />
-
           <CredentialsManager />
-
-          <SkillRadar 
-            skills={skillsData}
-            className="bg-white rounded-lg shadow-lg p-4"
-          />
+          <SkillRadar skills={skillsData} className="bg-white rounded-lg shadow-lg p-4" />
         </div>
 
         <div className="space-y-6">

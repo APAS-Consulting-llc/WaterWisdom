@@ -2,7 +2,7 @@ import { Link, useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { useUser } from '@/hooks/use-user';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { User, Settings, LogOut, Droplet, BookOpen, MessageSquare, Users, Brain, Bot } from 'lucide-react';
+import { User, Settings, LogOut, Droplet, BookOpen, MessageSquare, Users, Brain, Bot, Layout } from 'lucide-react';
 
 export function Navigation() {
   const { user, logout } = useUser();
@@ -16,6 +16,7 @@ export function Navigation() {
     { path: '/forum', label: 'Community Forum', icon: Users },
     { path: '/learning-paths', label: 'Learning Paths', icon: MessageSquare },
     { path: '/chat', label: 'AI Assistant', icon: Bot },
+    ...(user.role === 'admin' ? [{ path: '/admin', label: 'Admin Dashboard', icon: Layout }] : []),
   ];
 
   const handleLogout = async () => {
