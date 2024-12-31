@@ -10,6 +10,21 @@ import { useUser } from '@/hooks/use-user';
 import { Loader2, Trophy, Target, Award, Brain } from 'lucide-react';
 import { ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
+// Define types for our data
+interface Achievement {
+  id: number;
+  name: string;
+  description: string;
+}
+
+interface ProgressItem {
+  id: number;
+  correct: boolean;
+  question?: {
+    category: string;
+  };
+}
+
 // Sample skills data - in a real app, this would come from the API
 const skillsData = [
   { subject: 'Water Treatment', level: 85, fullMark: 100 },
@@ -22,11 +37,11 @@ const skillsData = [
 export default function ProfilePage() {
   const { user } = useUser();
 
-  const { data: achievements = [], isLoading: loadingAchievements } = useQuery({
+  const { data: achievements = [], isLoading: loadingAchievements } = useQuery<Achievement[]>({
     queryKey: ['/api/achievements'],
   });
 
-  const { data: progress = [], isLoading: loadingProgress } = useQuery({
+  const { data: progress = [], isLoading: loadingProgress } = useQuery<ProgressItem[]>({
     queryKey: ['/api/progress'],
   });
 
@@ -38,12 +53,12 @@ export default function ProfilePage() {
     );
   }
 
-  const totalQuestions = progress?.length || 0;
-  const correctAnswers = progress?.filter((p: any) => p.correct)?.length || 0;
+  const totalQuestions = progress.length;
+  const correctAnswers = progress.filter((p) => p.correct).length;
   const accuracy = totalQuestions > 0 ? (correctAnswers / totalQuestions) * 100 : 0;
 
   // Calculate category statistics
-  const categoryStats = progress?.reduce((acc: Record<string, { total: number; correct: number }>, p: any) => {
+  const categoryStats = progress.reduce((acc: Record<string, { total: number; correct: number }>, p) => {
     const category = p.question?.category || 'Unknown';
     if (!acc[category]) {
       acc[category] = { total: 0, correct: 0 };
@@ -51,9 +66,9 @@ export default function ProfilePage() {
     acc[category].total++;
     if (p.correct) acc[category].correct++;
     return acc;
-  }, {}) || {};
+  }, {});
 
-  const pieData = Object.entries(categoryStats || {}).map(([category, stats]: [string, any]) => ({
+  const pieData = Object.entries(categoryStats).map(([category, stats]) => ({
     name: category,
     value: stats.total,
   }));
@@ -91,12 +106,12 @@ export default function ProfilePage() {
                 <div className="text-center p-4 bg-green-50 rounded-lg">
                   <Trophy className="h-8 w-8 mx-auto mb-2 text-green-500" />
                   <p className="text-sm text-green-700">Current Streak</p>
-                  <p className="text-2xl font-bold text-green-900">{user?.streak || 0} 🔥</p>
+                  <p className="text-2xl font-bold text-green-900">{user.streak || 0} 🔥</p>
                 </div>
                 <div className="text-center p-4 bg-purple-50 rounded-lg">
                   <Award className="h-8 w-8 mx-auto mb-2 text-purple-500" />
                   <p className="text-sm text-purple-700">Total Points</p>
-                  <p className="text-2xl font-bold text-purple-900">{user?.points || 0}</p>
+                  <p className="text-2xl font-bold text-purple-900">{user.points || 0}</p>
                 </div>
                 <div className="text-center p-4 bg-orange-50 rounded-lg">
                   <Brain className="h-8 w-8 mx-auto mb-2 text-orange-500" />
@@ -107,7 +122,7 @@ export default function ProfilePage() {
 
               <div className="mt-6">
                 <h3 className="text-lg font-medium mb-4">Category Progress</h3>
-                {Object.entries(categoryStats || {}).map(([category, stats]: [string, any], index) => (
+                {Object.entries(categoryStats).map(([category, stats], index) => (
                   <div key={category} className="mb-4">
                     <div className="flex justify-between text-sm mb-1">
                       <span>{category}</span>
@@ -118,7 +133,7 @@ export default function ProfilePage() {
                       className="h-2"
                       style={{ 
                         '--progress-background': COLORS[index % COLORS.length] 
-                      } as any}
+                      }}
                     />
                   </div>
                 ))}
@@ -152,7 +167,7 @@ export default function ProfilePage() {
                       cx="50%"
                       cy="50%"
                       outerRadius={80}
-                      label={({ name, percent }: { name: string; percent: number }) => 
+                      label={({ name, percent }) => 
                         `${name}: ${(percent * 100).toFixed(0)}%`
                       }
                     >
@@ -171,7 +186,7 @@ export default function ProfilePage() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>Achievements</CardTitle>
-              {achievements?.length > 0 && (
+              {achievements.length > 0 && (
                 <ShareButtons 
                   url={shareUrl}
                   title={`I've earned ${achievements.length} achievements on Water.AI! 🏆`}
@@ -181,13 +196,13 @@ export default function ProfilePage() {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {achievements?.map((achievement: any) => (
+                {achievements.map((achievement) => (
                   <div key={achievement.id} className="p-4 bg-blue-50 rounded-lg">
                     <h3 className="font-semibold">{achievement.name}</h3>
                     <p className="text-sm text-gray-600">{achievement.description}</p>
                   </div>
                 ))}
-                {(!achievements || achievements.length === 0) && (
+                {achievements.length === 0 && (
                   <p className="text-gray-600 col-span-2 text-center py-8">
                     No achievements yet. Keep playing to earn badges!
                   </p>
