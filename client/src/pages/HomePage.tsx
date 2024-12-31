@@ -9,6 +9,7 @@ import { SkillRadar, type Skill } from '@/components/profile/SkillRadar';
 import { motion } from 'framer-motion';
 import { AvatarScroll } from '@/components/profile/AvatarScroll';
 import { Badge } from '@/components/ui/badge';
+import WaterNewsSection from '@/components/news/WaterNewsSection';
 
 // Animation variants...
 const containerVariants = {
@@ -140,6 +141,9 @@ export default function HomePage() {
           </motion.div>
         )}
       </motion.section>
+
+      {/* News Section - Added before Organization Info */}
+      <WaterNewsSection />
 
       {/* Organization Info */}
       <motion.section 
