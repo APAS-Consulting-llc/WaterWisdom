@@ -26,7 +26,7 @@ export default function MicroLearning() {
   };
 
   const shareUrl = window.location.href;
-  const shareText = content ? `${content.substring(0, 200)}... \n\nPowered by WaterWisdom.AI` : '';
+  const shareText = content ? `${content.substring(0, 200)}... \n\nPowered by ONE WATER HUB` : '';
   const shareTitle = 'Water Industry Insights';
 
   if (error) {
@@ -97,60 +97,15 @@ export default function MicroLearning() {
               </div>
             ) : (
               <div className="prose prose-slate dark:prose-invert max-w-none">
-                {content?.split('\n\n').map((section, index) => {
-                  if (section.startsWith('Title:')) {
-                    return <h2 key={index} className="text-2xl font-bold mb-4">{section.replace('Title:', '').trim()}</h2>;
-                  }
-                  if (section.startsWith('Key Concepts:')) {
-                    return (
-                      <div key={index} className="mb-6">
-                        <h3 className="text-lg font-semibold mb-2">Key Concepts</h3>
-                        <ul className="list-none pl-0">
-                          {section.replace('Key Concepts:', '')
-                            .split('•')
-                            .filter(item => item.trim())
-                            .map((item, i) => (
-                              <li key={i} className="flex items-center gap-2 mb-2">
-                                <span className="h-2 w-2 rounded-full bg-primary flex-shrink-0" />
-                                {item.trim()}
-                              </li>
-                            ))}
-                        </ul>
-                      </div>
-                    );
-                  }
-                  if (section.startsWith('Recent Developments:')) {
-                    return (
-                      <div key={index} className="mb-6">
-                        <h3 className="text-lg font-semibold mb-2">Recent Developments</h3>
-                        <p>{section.replace('Recent Developments:', '').trim()}</p>
-                      </div>
-                    );
-                  }
-                  if (section.startsWith('Practical Applications:')) {
-                    return (
-                      <div key={index} className="mb-6">
-                        <h3 className="text-lg font-semibold mb-2">Practical Applications</h3>
-                        <p>{section.replace('Practical Applications:', '').trim()}</p>
-                      </div>
-                    );
-                  }
-                  if (section.startsWith('Reflection Question:')) {
-                    return (
-                      <div key={index} className="mb-6 bg-primary/5 p-4 rounded-lg">
-                        <h3 className="text-lg font-semibold mb-2">Reflection Question</h3>
-                        <p className="italic">{section.replace('Reflection Question:', '').trim()}</p>
-                      </div>
-                    );
-                  }
-                  return <p key={index} className="mb-4">{section}</p>;
-                })}
+                {content?.split('\n\n').map((section, index) => (
+                  <p key={index} className="mb-4">{section}</p>
+                ))}
               </div>
             )}
           </CardContent>
           <CardFooter className="text-sm text-muted-foreground flex justify-between items-center">
             <p>Updated hourly</p>
-            <p className="font-medium">Powered by WaterWisdom.AI</p>
+            <p className="font-medium">Powered by ONE WATER HUB</p>
           </CardFooter>
         </Card>
       </motion.div>

@@ -33,7 +33,7 @@ export function Navigation() {
           <Button variant="ghost" className="p-0 hover:bg-transparent" asChild>
             <Link href="/">
               <Droplet className="w-6 h-6 mr-2 text-blue-500" />
-              <span className="text-xl font-bold text-blue-500">WaterWisdom</span>
+              <span className="text-xl font-bold text-blue-500">ONE WATER HUB</span>
             </Link>
           </Button>
 
