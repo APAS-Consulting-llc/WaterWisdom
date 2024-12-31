@@ -25,6 +25,11 @@ interface ProgressItem {
   };
 }
 
+interface CategoryStat {
+  total: number;
+  correct: number;
+}
+
 // Sample skills data - in a real app, this would come from the API
 const skillsData = [
   { subject: 'Water Treatment', level: 85, fullMark: 100 },
@@ -60,7 +65,7 @@ export default function ProfilePage() {
   const accuracy = totalQuestions > 0 ? (correctAnswers / totalQuestions) * 100 : 0;
 
   // Calculate category statistics
-  const categoryStats = progress.reduce((acc: Record<string, { total: number; correct: number }>, p) => {
+  const categoryStats = progress.reduce<Record<string, CategoryStat>>((acc, p) => {
     const category = p.question?.category || 'Unknown';
     if (!acc[category]) {
       acc[category] = { total: 0, correct: 0 };
