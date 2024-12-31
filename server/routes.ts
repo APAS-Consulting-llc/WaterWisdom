@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { setupAuth } from "./auth";
 import { db } from "@db";
-import { questions, userProgress, achievements, users } from "@db/schema";
+import { questions, userProgress, achievements, users, learningPaths, userLearningPaths } from "@db/schema";
 import { eq, and, count, avg } from "drizzle-orm";
 
 type DifficultyLevel = 'beginner' | 'intermediate' | 'expert';
@@ -20,10 +20,10 @@ function calculateRecommendedDifficulty(
   streak: number
 ): DifficultyLevel {
   if (accuracy >= 80 && streak >= 3) {
-    return currentDifficulty === 'beginner' ? 'intermediate' : 
+    return currentDifficulty === 'beginner' ? 'intermediate' :
            currentDifficulty === 'intermediate' ? 'expert' : 'expert';
   } else if (accuracy <= 40) {
-    return currentDifficulty === 'expert' ? 'intermediate' : 
+    return currentDifficulty === 'expert' ? 'intermediate' :
            currentDifficulty === 'intermediate' ? 'beginner' : 'beginner';
   }
   return currentDifficulty;
@@ -130,7 +130,7 @@ export function registerRoutes(app: Express): Server {
       // Update user streak and points
       await db
         .update(users)
-        .set({ 
+        .set({
           streak: correct ? currentStreak + 1 : 0,
           points: req.user.points + (correct ? 10 : 0)
         })
@@ -275,6 +275,85 @@ export function registerRoutes(app: Express): Server {
       res.json(newAchievements);
     } catch (error) {
       res.status(500).send("Failed to check achievements");
+    }
+  });
+
+
+  // Get all learning paths
+  app.get("/api/learning-paths", async (req, res) => {
+    try {
+      const paths = await db.select().from(learningPaths);
+      res.json(paths);
+    } catch (error) {
+      res.status(500).send("Failed to fetch learning paths");
+    }
+  });
+
+  // Get user's learning paths
+  app.get("/api/learning-paths/user", async (req, res) => {
+    if (!req.user) {
+      return res.status(401).send("Not authenticated");
+    }
+
+    try {
+      const userPaths = await db
+        .select()
+        .from(userLearningPaths)
+        .where(eq(userLearningPaths.userId, req.user.id));
+
+      res.json(userPaths);
+    } catch (error) {
+      res.status(500).send("Failed to fetch user learning paths");
+    }
+  });
+
+  // Enroll in a learning path
+  app.post("/api/learning-paths/enroll", async (req, res) => {
+    if (!req.user) {
+      return res.status(401).send("Not authenticated");
+    }
+
+    const { pathId } = req.body;
+    try {
+      const [path] = await db
+        .select()
+        .from(learningPaths)
+        .where(eq(learningPaths.id, pathId));
+
+      if (!path) {
+        return res.status(404).send("Learning path not found");
+      }
+
+      // Check if already enrolled
+      const [existingEnrollment] = await db
+        .select()
+        .from(userLearningPaths)
+        .where(and(
+          eq(userLearningPaths.userId, req.user.id),
+          eq(userLearningPaths.pathId, pathId)
+        ));
+
+      if (existingEnrollment) {
+        return res.status(400).send("Already enrolled in this learning path");
+      }
+
+      // Create progress object with all topics marked as incomplete
+      const topics = path.topics as string[];
+      const progress = Object.fromEntries(topics.map(topic => [topic, false]));
+
+      // Enroll user
+      const [enrollment] = await db
+        .insert(userLearningPaths)
+        .values({
+          userId: req.user.id,
+          pathId,
+          progress,
+        })
+        .returning();
+
+      res.json(enrollment);
+    } catch (error) {
+      res.status(500).send("Failed to enroll in learning path");
     }
   });
 
