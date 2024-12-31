@@ -2,42 +2,47 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { setupAuth } from "./auth";
 import { db } from "@db";
-import { questions, userProgress, achievements, users, learningPaths, userLearningPaths, forumPosts, forumComments, forumReactions, badges, userBadges, badgeCategories, knowledgeEntries, knowledgeVotes, knowledgeRevisions } from "@db/schema";
-import { eq, and, count, avg, desc } from "drizzle-orm";
-import { startDailyQuizScheduler } from './services/schedulerService';
-import { handleChatMessage } from './services/chatService';
-import { generateMicroLearning } from './services/microLearningService';
-
-type DifficultyLevel = 'beginner' | 'intermediate' | 'expert';
-
-interface PerformanceMetrics {
-  correctAnswers: number;
-  totalQuestions: number;
-  streakCount: number;
-  categoryAccuracy: Record<string, number>;
-}
-
-function calculateRecommendedDifficulty(
-  currentDifficulty: DifficultyLevel,
-  accuracy: number,
-  streak: number
-): DifficultyLevel {
-  if (accuracy >= 80 && streak >= 3) {
-    return currentDifficulty === 'beginner' ? 'intermediate' :
-           currentDifficulty === 'intermediate' ? 'expert' : 'expert';
-  } else if (accuracy <= 40) {
-    return currentDifficulty === 'expert' ? 'intermediate' :
-           currentDifficulty === 'intermediate' ? 'beginner' : 'beginner';
-  }
-  return currentDifficulty;
-}
-
-async function getPersonalizedNews(userId: number): Promise<any> {
-  return [{ title: "News item 1", content: "News content 1" }, { title: "News item 2", content: "News content 2" }];
-}
+import { users } from "@db/schema";
+import { eq } from "drizzle-orm";
 
 export function registerRoutes(app: Express): Server {
   setupAuth(app);
+
+  // Add user preferences endpoint
+  app.post("/api/user/preferences", async (req, res) => {
+    if (!req.user) {
+      return res.status(401).send("Not authenticated");
+    }
+
+    const {
+      phoneNumber,
+      enabled,
+      preferredQuizTime,
+      timezone,
+      newsletterEnabled,
+      newsletterFrequency,
+      newsletterTopics,
+    } = req.body;
+
+    try {
+      await db
+        .update(users)
+        .set({
+          phoneNumber,
+          smsNotificationsEnabled: enabled,
+          preferredQuizTime,
+          timezone,
+          newsletterEnabled,
+          newsletterFrequency,
+          newsletterTopics,
+        })
+        .where(eq(users.id, req.user.id));
+
+      res.json({ message: "Preferences updated successfully" });
+    } catch (error) {
+      res.status(500).send("Failed to update preferences");
+    }
+  });
 
   startDailyQuizScheduler();
 
@@ -791,3 +796,37 @@ export function registerRoutes(app: Express): Server {
   const httpServer = createServer(app);
   return httpServer;
 }
+
+interface PerformanceMetrics {
+  correctAnswers: number;
+  totalQuestions: number;
+  streakCount: number;
+  categoryAccuracy: Record<string, number>;
+}
+
+function calculateRecommendedDifficulty(
+  currentDifficulty: DifficultyLevel,
+  accuracy: number,
+  streak: number
+): DifficultyLevel {
+  if (accuracy >= 80 && streak >= 3) {
+    return currentDifficulty === 'beginner' ? 'intermediate' :
+           currentDifficulty === 'intermediate' ? 'expert' : 'expert';
+  } else if (accuracy <= 40) {
+    return currentDifficulty === 'expert' ? 'intermediate' :
+           currentDifficulty === 'intermediate' ? 'beginner' : 'beginner';
+  }
+  return currentDifficulty;
+}
+
+async function getPersonalizedNews(userId: number): Promise<any> {
+  return [{ title: "News item 1", content: "News content 1" }, { title: "News item 2", content: "News content 2" }];
+}
+
+type DifficultyLevel = 'beginner' | 'intermediate' | 'expert';
+
+import { questions, userProgress, achievements, learningPaths, userLearningPaths, forumPosts, forumComments, forumReactions, badges, userBadges, badgeCategories, knowledgeEntries, knowledgeVotes, knowledgeRevisions } from "@db/schema";
+import { and, count, avg, desc } from "drizzle-orm";
+import { startDailyQuizScheduler } from './services/schedulerService';
+import { handleChatMessage } from './services/chatService';
+import { generateMicroLearning } from './services/microLearningService';

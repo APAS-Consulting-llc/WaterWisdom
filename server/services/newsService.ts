@@ -26,7 +26,7 @@ export async function getContextualNews(userInterests: string[]): Promise<NewsIt
         },
         {
           role: "user",
-          content: `Find recent news articles related to these topics: ${userInterests.join(', ')}. Return in this format: [{"title": string, "summary": string, "url": string, "category": string, "timestamp": string, "relevanceScore": number}]`
+          content: `Find recent news articles related to these topics: ${userInterests.join(', ')}. Analyze trends and return personalized insights. Return in this format: [{"title": string, "summary": string, "url": string, "category": string, "timestamp": string, "relevanceScore": number}]`
         }
       ],
       temperature: 0.2,
@@ -42,21 +42,23 @@ export async function getContextualNews(userInterests: string[]): Promise<NewsIt
   const data = await response.json();
   const newsItems: NewsItem[] = JSON.parse(data.choices[0].message.content);
 
+  // Sort by relevance score
   return newsItems.sort((a, b) => b.relevanceScore - a.relevanceScore);
 }
 
 export async function getPersonalizedNews(userId: number): Promise<NewsItem[]> {
-  // Get user's interests based on their learning paths and progress
+  // Get user's interests based on their learning paths and quiz performance
   const userProgress = await db
     .select({
-      category: 'questions.category',
-      correctCount: db.count('userProgress.correct'),
+      category: questions.category,
+      correctCount: count(userProgress.correct),
     })
-    .from('userProgress')
-    .innerJoin('questions', eq('userProgress.questionId', 'questions.id'))
-    .where(eq('userProgress.userId', userId))
-    .groupBy('questions.category');
+    .from(userProgress)
+    .innerJoin(questions, eq(userProgress.questionId, questions.id))
+    .where(eq(userProgress.userId, userId))
+    .groupBy(questions.category);
 
+  // Extract user interests from their progress data
   const userInterests = userProgress
     .map(p => p.category)
     .filter(Boolean);
@@ -66,5 +68,6 @@ export async function getPersonalizedNews(userId: number): Promise<NewsItem[]> {
     userInterests.push('water treatment', 'sustainability', 'water management');
   }
 
+  // Get personalized news based on user interests
   return getContextualNews(userInterests);
 }

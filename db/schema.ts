@@ -17,6 +17,11 @@ export const users = pgTable("users", {
   lastNotificationSent: timestamp("last_notification_sent"),
   lastActiveAt: timestamp("last_active_at").defaultNow(),
   createdAt: timestamp("created_at").defaultNow(),
+  // Newsletter preferences
+  newsletterEnabled: boolean("newsletter_enabled").default(true),
+  newsletterFrequency: text("newsletter_frequency", { enum: ['daily', 'weekly', 'monthly'] }).default('weekly'),
+  newsletterTopics: jsonb("newsletter_topics").default(['water treatment', 'sustainability', 'management']),
+  lastNewsletterSent: timestamp("last_newsletter_sent"),
 });
 
 export const questions = pgTable("questions", {
@@ -170,6 +175,19 @@ export const knowledgeRevisions = pgTable("knowledge_revisions", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// New table for newsletter tracking
+export const newsletters = pgTable("newsletters", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id),
+  title: text("title").notNull(),
+  content: text("content").notNull(),
+  topics: jsonb("topics").default([]),
+  deliveredAt: timestamp("delivered_at").defaultNow(),
+  opened: boolean("opened").default(false),
+  openedAt: timestamp("opened_at"),
+  clickedLinks: jsonb("clicked_links").default([]),
+});
+
 // Relations
 export const userRelations = relations(users, ({ many }) => ({
   questions: many(questions),
@@ -183,6 +201,7 @@ export const userRelations = relations(users, ({ many }) => ({
   knowledgeEntries: many(knowledgeEntries),
   knowledgeVotes: many(knowledgeVotes),
   knowledgeRevisions: many(knowledgeRevisions),
+  newsletters: many(newsletters),
 }));
 
 export const questionRelations = relations(questions, ({ one, many }) => ({
@@ -304,6 +323,7 @@ export type QuestionType = 'multiple_choice' | 'true_false' | 'short_answer';
 export type DifficultyLevel = 'beginner' | 'intermediate' | 'expert';
 export type UserRole = 'user' | 'admin';
 export type AchievementType = 'streak' | 'points' | 'category_mastery' | 'quiz_completion' | 'perfect_score' | 'path_completion';
+export type NewsletterFrequency = 'daily' | 'weekly' | 'monthly';
 
 // Base types
 export type User = typeof users.$inferSelect;
@@ -329,6 +349,8 @@ export type KnowledgeVote = typeof knowledgeVotes.$inferSelect;
 export type NewKnowledgeVote = typeof knowledgeVotes.$inferInsert;
 export type KnowledgeRevision = typeof knowledgeRevisions.$inferSelect;
 export type NewKnowledgeRevision = typeof knowledgeRevisions.$inferInsert;
+export type Newsletter = typeof newsletters.$inferSelect;
+export type NewNewsletter = typeof newsletters.$inferInsert;
 
 // Schemas
 export const insertUserSchema = createInsertSchema(users);
@@ -360,3 +382,5 @@ export const insertKnowledgeVoteSchema = createInsertSchema(knowledgeVotes);
 export const selectKnowledgeVoteSchema = createSelectSchema(knowledgeVotes);
 export const insertKnowledgeRevisionSchema = createInsertSchema(knowledgeRevisions);
 export const selectKnowledgeRevisionSchema = createSelectSchema(knowledgeRevisions);
+export const insertNewsletterSchema = createInsertSchema(newsletters);
+export const selectNewsletterSchema = createSelectSchema(newsletters);
