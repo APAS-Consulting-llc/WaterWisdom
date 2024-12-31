@@ -69,15 +69,15 @@ function ShareButtons({ entry }: { entry: any }) {
 
   return (
     <div className="flex space-x-2 items-center">
-      <FacebookShareButton url={shareUrl} quote={title}>
+      <FacebookShareButton url={shareUrl} hashtag="#onewaterhub">
         <FacebookIcon size={iconSize} round={round} />
       </FacebookShareButton>
 
-      <TwitterShareButton url={shareUrl} title={title}>
+      <TwitterShareButton url={shareUrl} title={title} hashtags={["onewaterhub"]}>
         <TwitterIcon size={iconSize} round={round} />
       </TwitterShareButton>
 
-      <LinkedinShareButton url={shareUrl} title={title}>
+      <LinkedinShareButton url={shareUrl} title={title} summary={entry.content?.substring(0, 100)}>
         <LinkedinIcon size={iconSize} round={round} />
       </LinkedinShareButton>
 
@@ -85,7 +85,7 @@ function ShareButtons({ entry }: { entry: any }) {
         <WhatsappIcon size={iconSize} round={round} />
       </WhatsappShareButton>
 
-      <EmailShareButton url={shareUrl} subject={title}>
+      <EmailShareButton url={shareUrl} subject={title} body={entry.content?.substring(0, 200)}>
         <EmailIcon size={iconSize} round={round} />
       </EmailShareButton>
     </div>
