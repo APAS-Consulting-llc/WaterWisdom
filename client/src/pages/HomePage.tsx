@@ -2,7 +2,7 @@ import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Link } from 'wouter';
 import { useUser } from '@/hooks/use-user';
-import { Droplets, Building2, Sparkles, Book, Users, Brain } from 'lucide-react';
+import { Droplets, Building2, Sparkles, Book, Users, Brain, Briefcase, GraduationCap, Trophy } from 'lucide-react';
 import DelphiProfile from '@/components/profile/DelphiProfile';
 import MicroLearning from '@/components/learning/MicroLearning';
 import { motion } from 'framer-motion';
@@ -28,6 +28,24 @@ const itemVariants = {
     }
   }
 };
+
+const QuickActionCard = ({ icon: Icon, title, description, href }) => (
+  <Card className="group hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 cursor-pointer">
+    <Link href={href}>
+      <CardContent className="p-6">
+        <div className="flex items-center gap-4">
+          <div className="p-3 rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-colors">
+            <Icon className="w-6 h-6 text-primary" />
+          </div>
+          <div>
+            <h3 className="font-semibold text-lg mb-1">{title}</h3>
+            <p className="text-muted-foreground text-sm">{description}</p>
+          </div>
+        </div>
+      </CardContent>
+    </Link>
+  </Card>
+);
 
 export default function HomePage() {
   const { user } = useUser();
@@ -82,6 +100,33 @@ export default function HomePage() {
         >
           Your gateway to water sector excellence through AI-powered learning and community collaboration
         </motion.p>
+
+        {/* Quick Action Buttons */}
+        {user && (
+          <motion.div 
+            variants={itemVariants}
+            className="grid md:grid-cols-3 gap-4 max-w-4xl mx-auto mt-12"
+          >
+            <QuickActionCard
+              icon={Briefcase}
+              title="Explore Career Paths"
+              description="Discover your professional journey in the water sector"
+              href="/careers"
+            />
+            <QuickActionCard
+              icon={GraduationCap}
+              title="Take a Quiz"
+              description="Test your knowledge and earn certifications"
+              href="/quiz"
+            />
+            <QuickActionCard
+              icon={Trophy}
+              title="Build Portfolio"
+              description="Showcase your expertise and achievements"
+              href="/portfolio"
+            />
+          </motion.div>
+        )}
       </motion.section>
 
       {/* Organization Info */}
