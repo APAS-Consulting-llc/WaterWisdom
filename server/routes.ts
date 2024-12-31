@@ -861,6 +861,58 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  // Add this after the existing /api/knowledge route
+  app.post("/api/knowledge/sample", async (req, res) => {
+    try {
+      const [entry] = await db
+        .insert(knowledgeEntries)
+        .values({
+          title: "AI Applications Revolutionizing Water Sector Management",
+          content: `Artificial Intelligence (AI) is transforming the water sector through innovative applications that enhance efficiency, sustainability, and decision-making. Here are key areas where AI is making a significant impact:
+
+1. Smart Water Quality Monitoring
+- Real-time water quality analysis using machine learning algorithms
+- Predictive contamination detection systems
+- Automated water testing and reporting
+
+2. Infrastructure Management
+- Leak detection and prevention using AI pattern recognition
+- Predictive maintenance for water infrastructure
+- Asset lifecycle optimization
+
+3. Demand Forecasting
+- Machine learning models for water consumption prediction
+- Dynamic pricing optimization
+- Resource allocation improvement
+
+4. Treatment Process Optimization
+- Automated dosing control systems
+- Energy efficiency optimization
+- Process performance prediction
+
+5. Climate Change Adaptation
+- AI-powered climate impact assessment
+- Flood prediction and management
+- Drought resilience planning
+
+This technology integration is helping water utilities and organizations achieve better operational efficiency, reduce costs, and improve service delivery while promoting environmental sustainability.`,
+          category: "water_treatment",
+          tags: ["artificial_intelligence", "machine_learning", "water_management", "smart_water", "sustainability"],
+          authorId: 1, // Using the test user ID
+          score: 0,
+          viewCount: 0,
+          expertVerified: true,
+          mediaType: "text",
+        })
+        .returning();
+
+      res.json(entry);
+    } catch (error) {
+      console.error("Error creating sample knowledge entry:", error);
+      res.status(500).send("Failed to create sample knowledge entry");
+    }
+  });
+
   // Credentials management endpoints
   app.get("/api/user/credentials", async (req, res) => {
     if (!req.user) {
