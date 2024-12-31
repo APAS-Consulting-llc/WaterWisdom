@@ -134,6 +134,42 @@ export const forumReactions = pgTable("forum_reactions", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const knowledgeEntries = pgTable("knowledge_entries", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  content: text("content").notNull(),
+  category: text("category").notNull(),
+  tags: jsonb("tags").default([]),
+  authorId: integer("author_id").references(() => users.id),
+  expertVerified: boolean("expert_verified").default(false),
+  score: integer("score").default(0),
+  viewCount: integer("view_count").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const knowledgeVotes = pgTable("knowledge_votes", {
+  id: serial("id").primaryKey(),
+  entryId: integer("entry_id").references(() => knowledgeEntries.id),
+  userId: integer("user_id").references(() => users.id),
+  value: integer("value").notNull(), // 1 for upvote, -1 for downvote
+  expertise: text("expertise").notNull(), // area of expertise for the vote
+  comment: text("comment"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const knowledgeRevisions = pgTable("knowledge_revisions", {
+  id: serial("id").primaryKey(),
+  entryId: integer("entry_id").references(() => knowledgeEntries.id),
+  authorId: integer("author_id").references(() => users.id),
+  title: text("title").notNull(),
+  content: text("content").notNull(),
+  category: text("category").notNull(),
+  tags: jsonb("tags").default([]),
+  revisionNote: text("revision_note"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Relations
 export const userRelations = relations(users, ({ many }) => ({
   questions: many(questions),
@@ -144,6 +180,9 @@ export const userRelations = relations(users, ({ many }) => ({
   forumComments: many(forumComments),
   forumReactions: many(forumReactions),
   badges: many(userBadges),
+  knowledgeEntries: many(knowledgeEntries),
+  knowledgeVotes: many(knowledgeVotes),
+  knowledgeRevisions: many(knowledgeRevisions),
 }));
 
 export const questionRelations = relations(questions, ({ one, many }) => ({
@@ -228,6 +267,38 @@ export const userBadgeRelations = relations(userBadges, ({ one }) => ({
   }),
 }));
 
+export const knowledgeEntryRelations = relations(knowledgeEntries, ({ one, many }) => ({
+  author: one(users, {
+    fields: [knowledgeEntries.authorId],
+    references: [users.id],
+  }),
+  votes: many(knowledgeVotes),
+  revisions: many(knowledgeRevisions),
+}));
+
+export const knowledgeVoteRelations = relations(knowledgeVotes, ({ one }) => ({
+  entry: one(knowledgeEntries, {
+    fields: [knowledgeVotes.entryId],
+    references: [knowledgeEntries.id],
+  }),
+  user: one(users, {
+    fields: [knowledgeVotes.userId],
+    references: [users.id],
+  }),
+}));
+
+export const knowledgeRevisionRelations = relations(knowledgeRevisions, ({ one }) => ({
+  entry: one(knowledgeEntries, {
+    fields: [knowledgeRevisions.entryId],
+    references: [knowledgeEntries.id],
+  }),
+  author: one(users, {
+    fields: [knowledgeRevisions.authorId],
+    references: [users.id],
+  }),
+}));
+
+
 // Types
 export type QuestionType = 'multiple_choice' | 'true_false' | 'short_answer';
 export type DifficultyLevel = 'beginner' | 'intermediate' | 'expert';
@@ -252,6 +323,12 @@ export type NewForumReaction = typeof forumReactions.$inferInsert;
 export type BadgeCategory = typeof badgeCategories.$inferSelect;
 export type Badge = typeof badges.$inferSelect;
 export type UserBadge = typeof userBadges.$inferSelect;
+export type KnowledgeEntry = typeof knowledgeEntries.$inferSelect;
+export type NewKnowledgeEntry = typeof knowledgeEntries.$inferInsert;
+export type KnowledgeVote = typeof knowledgeVotes.$inferSelect;
+export type NewKnowledgeVote = typeof knowledgeVotes.$inferInsert;
+export type KnowledgeRevision = typeof knowledgeRevisions.$inferSelect;
+export type NewKnowledgeRevision = typeof knowledgeRevisions.$inferInsert;
 
 // Schemas
 export const insertUserSchema = createInsertSchema(users);
@@ -277,3 +354,9 @@ export const insertBadgeSchema = createInsertSchema(badges);
 export const selectBadgeSchema = createSelectSchema(badges);
 export const insertUserBadgeSchema = createInsertSchema(userBadges);
 export const selectUserBadgeSchema = createSelectSchema(userBadges);
+export const insertKnowledgeEntrySchema = createInsertSchema(knowledgeEntries);
+export const selectKnowledgeEntrySchema = createSelectSchema(knowledgeEntries);
+export const insertKnowledgeVoteSchema = createInsertSchema(knowledgeVotes);
+export const selectKnowledgeVoteSchema = createSelectSchema(knowledgeVotes);
+export const insertKnowledgeRevisionSchema = createInsertSchema(knowledgeRevisions);
+export const selectKnowledgeRevisionSchema = createSelectSchema(knowledgeRevisions);

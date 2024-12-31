@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { setupAuth } from "./auth";
 import { db } from "@db";
-import { questions, userProgress, achievements, users, learningPaths, userLearningPaths, forumPosts, forumComments, forumReactions, badges, userBadges, badgeCategories } from "@db/schema";
+import { questions, userProgress, achievements, users, learningPaths, userLearningPaths, forumPosts, forumComments, forumReactions, badges, userBadges, badgeCategories, knowledgeEntries, knowledgeVotes, knowledgeRevisions } from "@db/schema";
 import { eq, and, count, avg, desc } from "drizzle-orm";
 import { startDailyQuizScheduler } from './services/schedulerService';
 import { handleChatMessage } from './services/chatService';
@@ -32,20 +32,15 @@ function calculateRecommendedDifficulty(
   return currentDifficulty;
 }
 
-// Placeholder for getPersonalizedNews function.  Implementation details are needed.
 async function getPersonalizedNews(userId: number): Promise<any> {
-  // Replace this with actual news fetching logic
   return [{ title: "News item 1", content: "News content 1" }, { title: "News item 2", content: "News content 2" }];
 }
-
 
 export function registerRoutes(app: Express): Server {
   setupAuth(app);
 
-  // Start the daily quiz scheduler
   startDailyQuizScheduler();
 
-  // Add chat endpoint
   app.post("/api/chat", async (req, res) => {
     if (!req.user) {
       return res.status(401).send("Not authenticated");
@@ -65,7 +60,6 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // SMS Preferences Management
   app.post("/api/user/sms-preferences", async (req, res) => {
     if (!req.user) {
       return res.status(401).send("Not authenticated");
@@ -88,7 +82,6 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Get questions with adaptive difficulty
   app.get("/api/questions", async (req, res) => {
     try {
       const { category, difficulty } = req.query;
@@ -108,7 +101,6 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Submit answer with performance tracking
   app.post("/api/submit-answer", async (req, res) => {
     if (!req.user) {
       return res.status(401).send("Not authenticated");
@@ -127,7 +119,6 @@ export function registerRoutes(app: Express): Server {
 
       const correct = answer.toLowerCase() === question.correctAnswer.toLowerCase();
 
-      // Record progress
       const [progress] = await db
         .insert(userProgress)
         .values({
@@ -137,7 +128,6 @@ export function registerRoutes(app: Express): Server {
         })
         .returning();
 
-      // Calculate performance metrics
       const userStats = await db
         .select({
           total: count(),
@@ -150,7 +140,6 @@ export function registerRoutes(app: Express): Server {
         ))
         .innerJoin(questions, eq(userProgress.questionId, questions.id));
 
-      // Calculate category accuracy
       const categoryAccuracy = await db
         .select({
           category: questions.category,
@@ -175,7 +164,6 @@ export function registerRoutes(app: Express): Server {
         categoryAccuracy: categoryAccuracyMap,
       };
 
-      // Calculate recommended difficulty
       const accuracy = (performanceMetrics.correctAnswers / performanceMetrics.totalQuestions) * 100;
       const recommendedDifficulty = calculateRecommendedDifficulty(
         difficulty as DifficultyLevel,
@@ -183,7 +171,6 @@ export function registerRoutes(app: Express): Server {
         performanceMetrics.streakCount
       );
 
-      // Update user streak and points
       await db
         .update(users)
         .set({
@@ -192,7 +179,6 @@ export function registerRoutes(app: Express): Server {
         })
         .where(eq(users.id, req.user.id));
 
-      // Return progress with performance metrics and recommended difficulty
       res.json({
         ...progress,
         performanceMetrics,
@@ -204,7 +190,6 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Create question (admin only)
   app.post("/api/questions", async (req, res) => {
     if (!req.user || req.user.role !== "admin") {
       return res.status(403).send("Not authorized");
@@ -226,7 +211,6 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Get user progress
   app.get("/api/progress", async (req, res) => {
     if (!req.user) {
       return res.status(401).send("Not authenticated");
@@ -244,7 +228,6 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Get user achievements
   app.get("/api/achievements", async (req, res) => {
     if (!req.user) {
       return res.status(401).send("Not authenticated");
@@ -262,7 +245,6 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Check and award achievements
   app.post("/api/achievements/check", async (req, res) => {
     if (!req.user) {
       return res.status(401).send("Not authenticated");
@@ -272,7 +254,6 @@ export function registerRoutes(app: Express): Server {
       const { points, streak, category, correctAnswers, totalQuestions } = req.body;
       const newAchievements: typeof achievements.$inferInsert[] = [];
 
-      // Check for streak achievements
       if (streak >= 5) {
         newAchievements.push({
           userId: req.user.id,
@@ -284,7 +265,6 @@ export function registerRoutes(app: Express): Server {
         });
       }
 
-      // Check for points achievements
       if (points >= 100) {
         newAchievements.push({
           userId: req.user.id,
@@ -296,7 +276,6 @@ export function registerRoutes(app: Express): Server {
         });
       }
 
-      // Check for category mastery
       if (category && correctAnswers === totalQuestions) {
         newAchievements.push({
           userId: req.user.id,
@@ -308,7 +287,6 @@ export function registerRoutes(app: Express): Server {
         });
       }
 
-      // Check for perfect score
       if (correctAnswers === totalQuestions && totalQuestions >= 5) {
         newAchievements.push({
           userId: req.user.id,
@@ -320,7 +298,6 @@ export function registerRoutes(app: Express): Server {
         });
       }
 
-      // Insert new achievements and update user points
       if (newAchievements.length > 0) {
         await db.insert(achievements).values(newAchievements);
         await db.update(users)
@@ -335,7 +312,6 @@ export function registerRoutes(app: Express): Server {
   });
 
 
-  // Get all learning paths
   app.get("/api/learning-paths", async (req, res) => {
     try {
       const paths = await db.select().from(learningPaths);
@@ -345,7 +321,6 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Get user's learning paths
   app.get("/api/learning-paths/user", async (req, res) => {
     if (!req.user) {
       return res.status(401).send("Not authenticated");
@@ -363,7 +338,6 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Enroll in a learning path
   app.post("/api/learning-paths/enroll", async (req, res) => {
     if (!req.user) {
       return res.status(401).send("Not authenticated");
@@ -380,7 +354,6 @@ export function registerRoutes(app: Express): Server {
         return res.status(404).send("Learning path not found");
       }
 
-      // Check if already enrolled
       const [existingEnrollment] = await db
         .select()
         .from(userLearningPaths)
@@ -393,11 +366,9 @@ export function registerRoutes(app: Express): Server {
         return res.status(400).send("Already enrolled in this learning path");
       }
 
-      // Create progress object with all topics marked as incomplete
       const topics = path.topics as string[];
       const progress = Object.fromEntries(topics.map(topic => [topic, false]));
 
-      // Enroll user
       const [enrollment] = await db
         .insert(userLearningPaths)
         .values({
@@ -413,8 +384,6 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Forum Routes
-  // Get all forum posts
   app.get("/api/forum/posts", async (req, res) => {
     try {
       const posts = await db
@@ -422,7 +391,6 @@ export function registerRoutes(app: Express): Server {
         .from(forumPosts)
         .orderBy(desc(forumPosts.pinned), desc(forumPosts.createdAt));
 
-      // Get reactions count for each post
       const postsWithReactions = await Promise.all(posts.map(async (post) => {
         const reactions = await db
           .select({
@@ -453,7 +421,6 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Create forum post
   app.post("/api/forum/posts", async (req, res) => {
     if (!req.user) {
       return res.status(401).send("Not authenticated");
@@ -474,7 +441,6 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Get comments for a post
   app.get("/api/forum/posts/:postId/comments", async (req, res) => {
     const postId = parseInt(req.params.postId);
 
@@ -509,7 +475,6 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Create comment
   app.post("/api/forum/comments", async (req, res) => {
     if (!req.user) {
       return res.status(401).send("Not authenticated");
@@ -530,7 +495,6 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Add reaction
   app.post("/api/forum/reactions", async (req, res) => {
     if (!req.user) {
       return res.status(401).send("Not authenticated");
@@ -539,7 +503,6 @@ export function registerRoutes(app: Express): Server {
     const { type, postId, commentId } = req.body;
 
     try {
-      // Check if user already reacted
       const [existingReaction] = await db
         .select()
         .from(forumReactions)
@@ -552,14 +515,12 @@ export function registerRoutes(app: Express): Server {
         );
 
       if (existingReaction) {
-        // Remove reaction if it exists
         await db
           .delete(forumReactions)
           .where(eq(forumReactions.id, existingReaction.id));
         return res.json({ removed: true });
       }
 
-      // Add new reaction
       const [reaction] = await db
         .insert(forumReactions)
         .values({
@@ -576,12 +537,10 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Add this new endpoint
   app.get("/api/contributors/:userId", async (req, res) => {
     const userId = parseInt(req.params.userId);
 
     try {
-      // Get contributor's basic info
       const [contributor] = await db
         .select()
         .from(users)
@@ -591,7 +550,6 @@ export function registerRoutes(app: Express): Server {
         return res.status(404).send("Contributor not found");
       }
 
-      // Get contributor's badges with category information
       const contributorBadges = await db
         .select({
           badge: badges,
@@ -602,7 +560,6 @@ export function registerRoutes(app: Express): Server {
         .innerJoin(badges, eq(userBadges.badgeId, badges.id))
         .innerJoin(badgeCategories, eq(badges.categoryId, badgeCategories.id));
 
-      // Get contribution statistics
       const [stats] = await db
         .select({
           totalQuestions: count(),
@@ -630,7 +587,6 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Add this new endpoint
   app.get("/api/news", async (req, res) => {
     if (!req.user) {
       return res.status(401).send("Not authenticated");
@@ -645,7 +601,6 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Add micro-learning endpoint
   app.get("/api/micro-learning", async (req, res) => {
     try {
       const content = await generateMicroLearning();
@@ -653,6 +608,183 @@ export function registerRoutes(app: Express): Server {
     } catch (error) {
       console.error('Micro-learning endpoint error:', error);
       res.status(500).send("Failed to generate micro-learning content");
+    }
+  });
+
+  // Knowledge Base Routes
+  app.get("/api/knowledge", async (req, res) => {
+    try {
+      const entries = await db
+        .select()
+        .from(knowledgeEntries)
+        .orderBy(desc(knowledgeEntries.score));
+
+      const entriesWithMeta = await Promise.all(entries.map(async (entry) => {
+        const votes = await db
+          .select({
+            upvotes: count(knowledgeVotes.id),
+          })
+          .from(knowledgeVotes)
+          .where(and(
+            eq(knowledgeVotes.entryId, entry.id),
+            eq(knowledgeVotes.value, 1)
+          ));
+
+        const revisions = await db
+          .select({
+            count: count(),
+          })
+          .from(knowledgeRevisions)
+          .where(eq(knowledgeRevisions.entryId, entry.id));
+
+        return {
+          ...entry,
+          upvotes: Number(votes[0]?.upvotes || 0),
+          revisionCount: Number(revisions[0]?.count || 0),
+        };
+      }));
+
+      res.json(entriesWithMeta);
+    } catch (error) {
+      console.error("Error fetching knowledge entries:", error);
+      res.status(500).send("Failed to fetch knowledge entries");
+    }
+  });
+
+  app.post("/api/knowledge", async (req, res) => {
+    if (!req.user) {
+      return res.status(401).send("Not authenticated");
+    }
+
+    try {
+      const [entry] = await db
+        .insert(knowledgeEntries)
+        .values({
+          ...req.body,
+          authorId: req.user.id,
+        })
+        .returning();
+
+      res.json(entry);
+    } catch (error) {
+      console.error("Error creating knowledge entry:", error);
+      res.status(500).send("Failed to create knowledge entry");
+    }
+  });
+
+  app.get("/api/knowledge/:id", async (req, res) => {
+    const entryId = parseInt(req.params.id);
+
+    try {
+      const [entry] = await db
+        .select()
+        .from(knowledgeEntries)
+        .where(eq(knowledgeEntries.id, entryId));
+
+      if (!entry) {
+        return res.status(404).send("Knowledge entry not found");
+      }
+
+      await db
+        .update(knowledgeEntries)
+        .set({ viewCount: entry.viewCount + 1 })
+        .where(eq(knowledgeEntries.id, entryId));
+
+      const votes = await db
+        .select({
+          upvotes: count(knowledgeVotes.id),
+          expertVotes: count(users.role),
+        })
+        .from(knowledgeVotes)
+        .leftJoin(users, eq(knowledgeVotes.userId, users.id))
+        .where(and(
+          eq(knowledgeVotes.entryId, entryId),
+          eq(knowledgeVotes.value, 1),
+          eq(users.role, 'admin')
+        ));
+
+      const revisions = await db
+        .select()
+        .from(knowledgeRevisions)
+        .where(eq(knowledgeRevisions.entryId, entryId))
+        .orderBy(desc(knowledgeRevisions.createdAt));
+
+      res.json({
+        ...entry,
+        upvotes: Number(votes[0]?.upvotes || 0),
+        expertVotes: Number(votes[0]?.expertVotes || 0),
+        revisions,
+      });
+    } catch (error) {
+      console.error("Error fetching knowledge entry:", error);
+      res.status(500).send("Failed to fetch knowledge entry");
+    }
+  });
+
+  app.post("/api/knowledge/:id/vote", async (req, res) => {
+    if (!req.user) {
+      return res.status(401).send("Not authenticated");
+    }
+
+    const entryId = parseInt(req.params.id);
+    const { value, expertise, comment } = req.body;
+
+    try {
+      const [existingVote] = await db
+        .select()
+        .from(knowledgeVotes)
+        .where(and(
+          eq(knowledgeVotes.entryId, entryId),
+          eq(knowledgeVotes.userId, req.user.id)
+        ));
+
+      if (existingVote) {
+        const [updatedVote] = await db
+          .update(knowledgeVotes)
+          .set({ value, expertise, comment })
+          .where(eq(knowledgeVotes.id, existingVote.id))
+          .returning();
+
+        return res.json(updatedVote);
+      }
+
+      const [vote] = await db
+        .insert(knowledgeVotes)
+        .values({
+          entryId,
+          userId: req.user.id,
+          value,
+          expertise,
+          comment,
+        })
+        .returning();
+
+      await db
+        .update(knowledgeEntries)
+        .set({ score: value })
+        .where(eq(knowledgeEntries.id, entryId));
+
+      res.json(vote);
+    } catch (error) {
+      console.error("Error voting on knowledge entry:", error);
+      res.status(500).send("Failed to vote on knowledge entry");
+    }
+  });
+
+  app.get("/api/knowledge/:id/revisions", async (req, res) => {
+    const entryId = parseInt(req.params.id);
+
+    try {
+      const revisions = await db
+        .select()
+        .from(knowledgeRevisions)
+        .where(eq(knowledgeRevisions.entryId, entryId))
+        .orderBy(desc(knowledgeRevisions.createdAt));
+
+      res.json(revisions);
+    } catch (error) {
+      console.error("Error fetching revisions:", error);
+      res.status(500).send("Failed to fetch revisions");
     }
   });
 
