@@ -1462,6 +1462,110 @@ This technology integration is helping water utilities and organizations achieve
     res.json({ message: "Settings updated successfully" });
   });
 
+  app.get("/api/achievements", async (req, res) => {
+    if (!req.user) {
+      return res.status(401).send("Not authenticated");
+    }
+
+    try {
+      const achievements = await db
+        .select()
+        .from(achievements)
+        .where(eq(achievements.userId, req.user.id));
+
+      res.json(achievements);
+    } catch (error) {
+      console.error("Error fetching achievements:", error);
+      res.status(500).send("Failed to fetch achievements");
+    }
+  });
+
+  app.get("/api/progress", async (req, res) => {
+    if (!req.user) {
+      return res.status(401).send("Not authenticated");
+    }
+
+    try {
+      const progress = await db
+        .select({
+          id: userProgress.id,
+          userId: userProgress.userId,
+          questionId: userProgress.questionId,
+          correct: userProgress.correct,
+          question: {
+            id: questions.id,
+            category: questions.category,
+            type: questions.type
+          }
+        })
+        .from(userProgress)
+        .leftJoin(questions, eq(userProgress.questionId, questions.id))
+        .where(eq(userProgress.userId, req.user.id));
+
+      res.json(progress);
+    } catch (error) {
+      console.error("Error fetching progress:", error);
+      res.status(500).send("Failed to fetch progress");
+    }
+  });
+
+  app.get("/api/user/skills", async (req, res) => {
+    if (!req.user) {
+      return res.status(401).send("Not authenticated");
+    }
+
+    try {
+      const skills = await db
+        .select()
+        .from(userSkills)
+        .leftJoin(skillEndorsements, eq(userSkills.id, skillEndorsements.skillId))
+        .where(eq(userSkills.userId, req.user.id));
+
+      res.json(skills);
+    } catch (error) {
+      console.error("Error fetching skills:", error);
+      res.status(500).send("Failed to fetch skills");
+    }
+  });
+
+  app.get("/api/user/credentials", async (req, res) => {
+    if (!req.user) {
+      return res.status(401).send("Not authenticated");
+    }
+
+    try {
+      const credentials = await db
+        .select()
+        .from(userCredentials)
+        .where(eq(userCredentials.userId, req.user.id))
+        .orderBy(desc(userCredentials.createdAt));
+
+      res.json(credentials);
+    } catch (error) {
+      console.error("Error fetching credentials:", error);
+      res.status(500).send("Failed to fetch credentials");
+    }
+  });
+
+  app.get("/api/user/publications", async (req, res) => {
+    if (!req.user) {
+      return res.status(401).send("Not authenticated");
+    }
+
+    try {
+      const publications = await db
+        .select()
+        .from(userPublications)
+        .where(eq(userPublications.userId, req.user.id))
+        .orderBy(desc(userPublications.publicationDate));
+
+      res.json(publications);
+    } catch (error) {
+      console.error("Error fetching publications:", error);
+      res.status(500).send("Failed to fetch publications");
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
