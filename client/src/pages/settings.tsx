@@ -73,6 +73,14 @@ export default function SettingsPage() {
     mutation.mutate(data);
   };
 
+  if (!user) {
+    return (
+      <div className="flex items-center justify-center min-h-[calc(100vh-4rem)]">
+        <p className="text-lg text-gray-600">Please log in to access settings</p>
+      </div>
+    );
+  }
+
   return (
     <div className="container max-w-2xl py-10">
       <div className="space-y-6">

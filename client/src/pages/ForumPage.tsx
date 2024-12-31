@@ -13,12 +13,18 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Loader2, MessageCircle, ThumbsUp, HeartHandshake, BookOpen } from 'lucide-react';
 import { format } from 'date-fns';
+import type { ForumPost, ForumComment, ForumReaction } from '@db/schema';
 
 const createPostSchema = z.object({
   title: z.string().min(5, 'Title must be at least 5 characters'),
   content: z.string().min(20, 'Content must be at least 20 characters'),
   tags: z.string().optional(),
 });
+
+type PostWithDetails = ForumPost & {
+  reactions?: Record<string, number>;
+  comments?: ForumComment[];
+};
 
 export default function ForumPage() {
   const { posts, loadingPosts, createPost } = useForum();
@@ -134,7 +140,7 @@ export default function ForumPage() {
       </div>
 
       <div className="space-y-4">
-        {posts.map((post) => (
+        {(posts as PostWithDetails[]).map((post) => (
           <Card key={post.id} className="transition-shadow hover:shadow-lg">
             <CardHeader>
               <div className="flex justify-between items-start">
@@ -143,7 +149,7 @@ export default function ForumPage() {
                   <div className="flex items-center text-sm text-muted-foreground">
                     <span>Posted by {user?.id === post.authorId ? 'you' : 'Anonymous'}</span>
                     <span className="mx-2">•</span>
-                    <span>{format(new Date(post.createdAt), 'MMM d, yyyy')}</span>
+                    <span>{post.createdAt ? format(new Date(post.createdAt), 'MMM d, yyyy') : 'Unknown date'}</span>
                   </div>
                 </div>
                 {post.pinned && (
@@ -158,15 +164,15 @@ export default function ForumPage() {
               <div className="flex items-center gap-4 text-sm text-muted-foreground">
                 <div className="flex items-center gap-1">
                   <ThumbsUp className="h-4 w-4" />
-                  <span>{(post.reactions as any)?.like || 0}</span>
+                  <span>{post.reactions?.like || 0}</span>
                 </div>
                 <div className="flex items-center gap-1">
                   <HeartHandshake className="h-4 w-4" />
-                  <span>{(post.reactions as any)?.helpful || 0}</span>
+                  <span>{post.reactions?.helpful || 0}</span>
                 </div>
                 <div className="flex items-center gap-1">
                   <BookOpen className="h-4 w-4" />
-                  <span>{(post.reactions as any)?.insightful || 0}</span>
+                  <span>{post.reactions?.insightful || 0}</span>
                 </div>
                 <div className="flex items-center gap-1">
                   <MessageCircle className="h-4 w-4" />
