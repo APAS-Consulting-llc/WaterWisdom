@@ -12,7 +12,7 @@ export const users = pgTable("users", {
   streak: integer("streak").notNull().default(0),
   phoneNumber: text("phone_number"),
   smsNotificationsEnabled: boolean("sms_notifications_enabled").default(false),
-  preferredQuizTime: text("preferred_quiz_time").default('10:00'), // Store time in 24-hour format
+  preferredQuizTime: text("preferred_quiz_time").default('10:00'),
   timezone: text("timezone").default('UTC'),
   lastNotificationSent: timestamp("last_notification_sent"),
   lastActiveAt: timestamp("last_active_at").defaultNow(),
@@ -75,7 +75,33 @@ export const achievements = pgTable("achievements", {
   unlockedAt: timestamp("unlocked_at").defaultNow(),
 });
 
-// New forum-related tables
+export const badgeCategories = pgTable("badge_categories", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description").notNull(),
+  icon: text("icon").notNull(), // Lucide icon name
+  color: text("color").notNull(), // Tailwind color class
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const badges = pgTable("badges", {
+  id: serial("id").primaryKey(),
+  categoryId: integer("category_id").references(() => badgeCategories.id),
+  name: text("name").notNull(),
+  description: text("description").notNull(),
+  icon: text("icon").notNull(), // Lucide icon name
+  color: text("color").notNull(), // Tailwind color class
+  criteria: jsonb("criteria").notNull(), // e.g., { "questionCount": 10, "category": "water_treatment" }
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const userBadges = pgTable("user_badges", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id),
+  badgeId: integer("badge_id").references(() => badges.id),
+  awardedAt: timestamp("awarded_at").defaultNow(),
+});
+
 export const forumPosts = pgTable("forum_posts", {
   id: serial("id").primaryKey(),
   title: text("title").notNull(),
@@ -117,6 +143,7 @@ export const userRelations = relations(users, ({ many }) => ({
   forumPosts: many(forumPosts),
   forumComments: many(forumComments),
   forumReactions: many(forumReactions),
+  badges: many(userBadges),
 }));
 
 export const questionRelations = relations(questions, ({ one, many }) => ({
@@ -178,6 +205,28 @@ export const forumCommentRelations = relations(forumComments, ({ one, many }) =>
   reactions: many(forumReactions),
 }));
 
+export const badgeCategoryRelations = relations(badgeCategories, ({ many }) => ({
+  badges: many(badges),
+}));
+
+export const badgeRelations = relations(badges, ({ one, many }) => ({
+  category: one(badgeCategories, {
+    fields: [badges.categoryId],
+    references: [badgeCategories.id],
+  }),
+  userBadges: many(userBadges),
+}));
+
+export const userBadgeRelations = relations(userBadges, ({ one }) => ({
+  user: one(users, {
+    fields: [userBadges.userId],
+    references: [users.id],
+  }),
+  badge: one(badges, {
+    fields: [userBadges.badgeId],
+    references: [badges.id],
+  }),
+}));
 
 // Types
 export type QuestionType = 'multiple_choice' | 'true_false' | 'short_answer';
@@ -200,6 +249,9 @@ export type ForumComment = typeof forumComments.$inferSelect;
 export type NewForumComment = typeof forumComments.$inferInsert;
 export type ForumReaction = typeof forumReactions.$inferSelect;
 export type NewForumReaction = typeof forumReactions.$inferInsert;
+export type BadgeCategory = typeof badgeCategories.$inferSelect;
+export type Badge = typeof badges.$inferSelect;
+export type UserBadge = typeof userBadges.$inferSelect;
 
 // Schemas
 export const insertUserSchema = createInsertSchema(users);
@@ -219,3 +271,9 @@ export const insertForumCommentSchema = createInsertSchema(forumComments);
 export const selectForumCommentSchema = createSelectSchema(forumComments);
 export const insertForumReactionSchema = createInsertSchema(forumReactions);
 export const selectForumReactionSchema = createSelectSchema(forumReactions);
+export const insertBadgeCategorySchema = createInsertSchema(badgeCategories);
+export const selectBadgeCategorySchema = createSelectSchema(badgeCategories);
+export const insertBadgeSchema = createInsertSchema(badges);
+export const selectBadgeSchema = createSelectSchema(badges);
+export const insertUserBadgeSchema = createInsertSchema(userBadges);
+export const selectUserBadgeSchema = createSelectSchema(userBadges);

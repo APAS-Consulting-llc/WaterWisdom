@@ -6,8 +6,18 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { ShareButtons } from '@/components/ui/ShareButtons';
+import { Badge } from '@/components/ui/Badge';
+import { 
+  BeakerIcon, 
+  Droplets, 
+  ShieldCheck, 
+  Lightbulb, 
+  GraduationCap,
+  AlertCircle, 
+  CheckCircle2, 
+  BookOpen 
+} from 'lucide-react';
 import type { Question } from '@db/schema';
-import { AlertCircle, CheckCircle2, BookOpen } from 'lucide-react';
 
 interface QuestionCardProps {
   question: Question;
@@ -18,8 +28,13 @@ export function QuestionCard({ question, onSubmit }: QuestionCardProps) {
   const [answer, setAnswer] = useState('');
   const [isAnswered, setIsAnswered] = useState(false);
   const { toast } = useToast();
-
   const shareUrl = typeof window !== 'undefined' ? window.location.href : '';
+
+  // Example badges for Hardeep Anand (will be replaced with dynamic data)
+  const badges = [
+    { name: 'Treatment Specialist', icon: BeakerIcon, color: 'blue' },
+    { name: 'Water Saver', icon: Droplets, color: 'green' },
+  ];
 
   const handleSubmit = () => {
     if (!answer) {
@@ -45,13 +60,34 @@ export function QuestionCard({ question, onSubmit }: QuestionCardProps) {
           </div>
         </div>
         <h2 className="text-xl font-semibold mb-4">{question.question}</h2>
+
+        {/* Contributor info with badges */}
         <div className="bg-white/10 rounded-lg p-4">
-          <h3 className="text-sm font-medium text-white mb-2">Share this question:</h3>
-          <ShareButtons 
-            url={shareUrl}
-            title={`🌊 Water Knowledge Quiz: ${question.question}`}
-            description={`Test your knowledge in ${question.category}! Join me in learning about water sector topics at Water.AI`}
-          />
+          <div className="mb-3">
+            <h3 className="text-sm font-medium text-white">Contributed by:</h3>
+            <div className="flex items-center gap-2 mt-1">
+              <span className="font-medium">Hardeep Anand</span>
+              <div className="flex gap-1">
+                {badges.map((badge, index) => (
+                  <Badge
+                    key={index}
+                    name={badge.name}
+                    icon={badge.icon}
+                    color={badge.color}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <h3 className="text-sm font-medium text-white mb-2">Share this question:</h3>
+            <ShareButtons 
+              url={shareUrl}
+              title={`🌊 Water Knowledge Quiz: ${question.question}`}
+              description={`Test your knowledge in ${question.category}! Join me in learning about water sector topics at Water.AI`}
+            />
+          </div>
         </div>
       </CardHeader>
 
@@ -119,7 +155,7 @@ export function QuestionCard({ question, onSubmit }: QuestionCardProps) {
                   {question.explanation}
                 </p>
                 <p className="text-xs text-blue-600 mt-4 italic">
-                  Powered by Water.AI - All rights reserved 2024
+                  Question contributed by Hardeep Anand • Powered by Water.AI - All rights reserved 2024
                 </p>
               </div>
             )}
