@@ -5,8 +5,9 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
+import { ShareButtons } from '@/components/ui/ShareButtons';
 import type { Question } from '@db/schema';
-import { AlertCircle, CheckCircle2, BookOpen } from 'lucide-react';
+import { AlertCircle, CheckCircle2, BookOpen, Share2 } from 'lucide-react';
 
 interface QuestionCardProps {
   question: Question;
@@ -16,7 +17,10 @@ interface QuestionCardProps {
 export function QuestionCard({ question, onSubmit }: QuestionCardProps) {
   const [answer, setAnswer] = useState('');
   const [isAnswered, setIsAnswered] = useState(false);
+  const [showShare, setShowShare] = useState(false);
   const { toast } = useToast();
+
+  const shareUrl = typeof window !== 'undefined' ? window.location.href : '';
 
   const handleSubmit = () => {
     if (!answer) {
@@ -34,11 +38,32 @@ export function QuestionCard({ question, onSubmit }: QuestionCardProps) {
   return (
     <Card className="w-full max-w-2xl mx-auto">
       <CardHeader className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-t-lg">
-        <div className="flex items-center justify-between">
-          <span className="text-sm uppercase">{question.category}</span>
-          <span className="text-sm uppercase">{question.difficulty}</span>
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <span className="text-sm uppercase">{question.category}</span>
+            <span className="mx-2">•</span>
+            <span className="text-sm uppercase">{question.difficulty}</span>
+          </div>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="text-white hover:text-white/80"
+            onClick={() => setShowShare(!showShare)}
+          >
+            <Share2 className="h-4 w-4 mr-2" />
+            Share
+          </Button>
         </div>
-        <h2 className="text-xl font-semibold mt-2">{question.question}</h2>
+        <h2 className="text-xl font-semibold">{question.question}</h2>
+        {showShare && (
+          <div className="mt-4 p-4 bg-white/10 rounded-lg">
+            <ShareButtons 
+              url={shareUrl}
+              title={`Can you answer this water knowledge question: ${question.question}`}
+              description={`Test your water sector knowledge with this question about ${question.category}!`}
+            />
+          </div>
+        )}
       </CardHeader>
 
       <CardContent className="pt-6">
@@ -95,15 +120,20 @@ export function QuestionCard({ question, onSubmit }: QuestionCardProps) {
               </div>
             </div>
 
-            <div className="p-4 bg-blue-50 rounded-lg">
-              <div className="flex items-center gap-2 mb-2">
-                <BookOpen className="h-5 w-5 text-blue-500" />
-                <h4 className="font-medium text-blue-900">Learn More</h4>
+            {question.explanation && (
+              <div className="p-4 bg-blue-50 rounded-lg">
+                <div className="flex items-center gap-2 mb-2">
+                  <BookOpen className="h-5 w-5 text-blue-500" />
+                  <h4 className="font-medium text-blue-900">Learn More</h4>
+                </div>
+                <p className="text-sm text-blue-800 leading-relaxed whitespace-pre-wrap">
+                  {question.explanation}
+                </p>
+                <p className="text-xs text-blue-600 mt-4 italic">
+                  Powered by Water.AI - All rights reserved 2024
+                </p>
               </div>
-              <p className="text-sm text-blue-800 leading-relaxed whitespace-pre-wrap">
-                {question.explanation || "No explanation available for this question."}
-              </p>
-            </div>
+            )}
           </div>
         )}
       </CardContent>

@@ -3,7 +3,6 @@ import { useQuiz } from '@/hooks/use-quiz';
 import { QuestionCard } from '@/components/quiz/QuestionCard';
 import { ProgressBar } from '@/components/quiz/ProgressBar';
 import { QuizSetup } from '@/components/quiz/QuizSetup';
-import { ShareButtons } from '@/components/ui/ShareButtons';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -20,7 +19,6 @@ export default function QuizPage() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [streak, setStreak] = useState(0);
   const [score, setScore] = useState(0);
-  const [showExplanation, setShowExplanation] = useState(false);
   const [showDifficultyChange, setShowDifficultyChange] = useState<{
     from: DifficultyLevel;
     to: DifficultyLevel;
@@ -55,8 +53,6 @@ export default function QuizPage() {
     .slice(0, maxQuestions);
 
   const currentQuestion: Question | undefined = selectedQuestions[currentIndex];
-  const shareUrl = typeof window !== 'undefined' ? window.location.href : '';
-
   const categories = Array.from(new Set(questions.map(q => q.category)));
 
   const handleStartQuiz = (config: {
@@ -72,11 +68,9 @@ export default function QuizPage() {
     setScore(0);
     setStreak(0);
     setShowDifficultyChange(null);
-    setShowExplanation(false);
   };
 
   const handleNextQuestion = () => {
-    setShowExplanation(false);
     if (currentIndex < maxQuestions - 1) {
       setCurrentIndex(prev => prev + 1);
     } else {
@@ -116,7 +110,6 @@ export default function QuizPage() {
         const points = calculatePoints(currentQuestion.difficulty, streak + 1);
         setScore(prev => prev + points);
         setStreak(prev => result.correct ? prev + 1 : 0);
-        setShowExplanation(true);
 
         if (result.recommendedDifficulty !== selectedDifficulty) {
           setShowDifficultyChange({
@@ -185,20 +178,6 @@ export default function QuizPage() {
               question={currentQuestion}
               onSubmit={handleSubmit}
             />
-            {showExplanation && currentQuestion.explanation && (
-              <div className="mt-6 bg-white p-6 rounded-lg shadow-md">
-                <h3 className="text-lg font-semibold mb-2">Learn More</h3>
-                <p className="text-gray-700">{currentQuestion.explanation}</p>
-                <div className="mt-4">
-                  <h4 className="text-sm font-medium text-gray-500 mb-2">Share this question:</h4>
-                  <ShareButtons 
-                    url={shareUrl}
-                    title={`Test your water knowledge! Can you answer this question about ${currentQuestion.category}?`}
-                    description={currentQuestion.question}
-                  />
-                </div>
-              </div>
-            )}
             <div className="mt-4 flex justify-end">
               <Button onClick={handleNextQuestion}>
                 {currentIndex < maxQuestions - 1 ? 'Next Question' : 'Finish Quiz'}
