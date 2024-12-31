@@ -2,10 +2,12 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { setupAuth } from "./auth";
 import { db } from "@db";
-import { users } from "@db/schema";
-import { eq } from "drizzle-orm";
+import { users, userCredentials, userPublications, questions, userProgress, achievements, learningPaths, userLearningPaths, forumPosts, forumComments, forumReactions, badges, userBadges, badgeCategories, knowledgeEntries, knowledgeVotes, knowledgeRevisions } from "@db/schema";
+import { eq, and, count, avg, desc } from "drizzle-orm";
 import CollaborationService from "./services/collaborationService";
 import { handleChatMessage } from './services/chatService';
+import { startDailyQuizScheduler } from './services/schedulerService';
+import { generateMicroLearning } from './services/microLearningService';
 
 export function registerRoutes(app: Express): Server {
   setupAuth(app);
@@ -817,6 +819,87 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  // Credentials management endpoints
+  app.get("/api/user/credentials", async (req, res) => {
+    if (!req.user) {
+      return res.status(401).send("Not authenticated");
+    }
+
+    try {
+      const credentials = await db
+        .select()
+        .from(userCredentials)
+        .where(eq(userCredentials.userId, req.user.id))
+        .orderBy(desc(userCredentials.createdAt));
+
+      res.json(credentials);
+    } catch (error) {
+      console.error("Error fetching credentials:", error);
+      res.status(500).send("Failed to fetch credentials");
+    }
+  });
+
+  app.post("/api/user/credentials", async (req, res) => {
+    if (!req.user) {
+      return res.status(401).send("Not authenticated");
+    }
+
+    try {
+      const [credential] = await db
+        .insert(userCredentials)
+        .values({
+          ...req.body,
+          userId: req.user.id,
+        })
+        .returning();
+
+      res.json(credential);
+    } catch (error) {
+      console.error("Error adding credential:", error);
+      res.status(500).send("Failed to add credential");
+    }
+  });
+
+  app.get("/api/user/publications", async (req, res) => {
+    if (!req.user) {
+      return res.status(401).send("Not authenticated");
+    }
+
+    try {
+      const publications = await db
+        .select()
+        .from(userPublications)
+        .where(eq(userPublications.userId, req.user.id))
+        .orderBy(desc(userPublications.publicationDate));
+
+      res.json(publications);
+    } catch (error) {
+      console.error("Error fetching publications:", error);
+      res.status(500).send("Failed to fetch publications");
+    }
+  });
+
+  app.post("/api/user/publications", async (req, res) => {
+    if (!req.user) {
+      return res.status(401).send("Not authenticated");
+    }
+
+    try {
+      const [publication] = await db
+        .insert(userPublications)
+        .values({
+          ...req.body,
+          userId: req.user.id,
+        })
+        .returning();
+
+      res.json(publication);
+    } catch (error) {
+      console.error("Error adding publication:", error);
+      res.status(500).send("Failed to add publication");
+    }
+  });
+
   return httpServer;
 }
 
@@ -847,8 +930,3 @@ async function getPersonalizedNews(userId: number): Promise<any> {
 }
 
 type DifficultyLevel = 'beginner' | 'intermediate' | 'expert';
-
-import { questions, userProgress, achievements, learningPaths, userLearningPaths, forumPosts, forumComments, forumReactions, badges, userBadges, badgeCategories, knowledgeEntries, knowledgeVotes, knowledgeRevisions } from "@db/schema";
-import { and, count, avg, desc } from "drizzle-orm";
-import { startDailyQuizScheduler } from './services/schedulerService';
-import { generateMicroLearning } from './services/microLearningService';

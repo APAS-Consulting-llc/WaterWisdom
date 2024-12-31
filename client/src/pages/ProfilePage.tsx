@@ -4,8 +4,9 @@ import { AchievementBadge } from '@/components/quiz/AchievementBadge';
 import { Progress } from '@/components/ui/progress';
 import { SkillRadar, type Skill } from '@/components/profile/SkillRadar';
 import { ShareButtons } from '@/components/ui/ShareButtons';
+import CredentialsManager from '@/components/profile/CredentialsManager';
 import { useUser } from '@/hooks/use-user';
-import { Loader2, Trophy, Target, Award, Brain, Share2 } from 'lucide-react';
+import { Loader2, Trophy, Target, Award, Brain } from 'lucide-react';
 import { ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
 // Sample skills data - in a real app, this would come from the API
@@ -123,6 +124,9 @@ export default function ProfilePage() {
               </div>
             </CardContent>
           </Card>
+
+          <CredentialsManager />
+
           <SkillRadar 
             skills={skillsData}
             className="bg-white rounded-lg shadow-scale"

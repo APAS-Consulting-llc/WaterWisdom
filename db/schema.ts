@@ -194,6 +194,43 @@ export const newsletters = pgTable("newsletters", {
   clickedLinks: jsonb("clicked_links").default([]),
 });
 
+// New tables for credentials tracking
+export const userCredentials = pgTable("user_credentials", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id),
+  type: text("type", { enum: ['certification', 'license', 'publication'] }).notNull(),
+  title: text("title").notNull(),
+  issuingOrganization: text("issuing_organization").notNull(),
+  issueDate: timestamp("issue_date").notNull(),
+  expiryDate: timestamp("expiry_date"),
+  credentialId: text("credential_id"),
+  documentUrl: text("document_url"),
+  verificationUrl: text("verification_url"),
+  description: text("description"),
+  status: text("status", { enum: ['active', 'expired', 'pending', 'revoked'] }).notNull().default('active'),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const userPublications = pgTable("user_publications", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id),
+  title: text("title").notNull(),
+  authors: text("authors").notNull(),
+  publicationType: text("publication_type", {
+    enum: ['journal_article', 'conference_paper', 'book_chapter', 'technical_report', 'white_paper']
+  }).notNull(),
+  publishedIn: text("published_in").notNull(),
+  publicationDate: timestamp("publication_date").notNull(),
+  doi: text("doi"),
+  url: text("url"),
+  abstract: text("abstract"),
+  citations: integer("citations").default(0),
+  documentUrl: text("document_url"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Relations
 export const userRelations = relations(users, ({ many }) => ({
   questions: many(questions),
@@ -208,6 +245,8 @@ export const userRelations = relations(users, ({ many }) => ({
   knowledgeVotes: many(knowledgeVotes),
   knowledgeRevisions: many(knowledgeRevisions),
   newsletters: many(newsletters),
+  credentials: many(userCredentials), // New relation
+  publications: many(userPublications), // New relation
 }));
 
 export const questionRelations = relations(questions, ({ one, many }) => ({
@@ -324,6 +363,20 @@ export const knowledgeRevisionRelations = relations(knowledgeRevisions, ({ one }
 }));
 
 
+export const userCredentialRelations = relations(userCredentials, ({ one }) => ({
+  user: one(users, {
+    fields: [userCredentials.userId],
+    references: [users.id],
+  }),
+}));
+
+export const userPublicationRelations = relations(userPublications, ({ one }) => ({
+  user: one(users, {
+    fields: [userPublications.userId],
+    references: [users.id],
+  }),
+}));
+
 // Types
 export type QuestionType = 'multiple_choice' | 'true_false' | 'short_answer';
 export type DifficultyLevel = 'beginner' | 'intermediate' | 'expert';
@@ -360,6 +413,10 @@ export type KnowledgeRevision = typeof knowledgeRevisions.$inferSelect;
 export type NewKnowledgeRevision = typeof knowledgeRevisions.$inferInsert;
 export type Newsletter = typeof newsletters.$inferSelect;
 export type NewNewsletter = typeof newsletters.$inferInsert;
+export type UserCredential = typeof userCredentials.$inferSelect;
+export type NewUserCredential = typeof userCredentials.$inferInsert;
+export type UserPublication = typeof userPublications.$inferSelect;
+export type NewUserPublication = typeof userPublications.$inferInsert;
 
 // Schemas
 export const insertUserSchema = createInsertSchema(users);
@@ -393,3 +450,20 @@ export const insertKnowledgeRevisionSchema = createInsertSchema(knowledgeRevisio
 export const selectKnowledgeRevisionSchema = createSelectSchema(knowledgeRevisions);
 export const insertNewsletterSchema = createInsertSchema(newsletters);
 export const selectNewsletterSchema = createSelectSchema(newsletters);
+
+export const insertUserCredentialSchema = createInsertSchema(userCredentials, {
+  type: z.enum(['certification', 'license', 'publication']),
+  status: z.enum(['active', 'expired', 'pending', 'revoked']),
+});
+export const selectUserCredentialSchema = createSelectSchema(userCredentials);
+
+export const insertUserPublicationSchema = createInsertSchema(userPublications, {
+  publicationType: z.enum([
+    'journal_article',
+    'conference_paper',
+    'book_chapter',
+    'technical_report',
+    'white_paper'
+  ]),
+});
+export const selectUserPublicationSchema = createSelectSchema(userPublications);
