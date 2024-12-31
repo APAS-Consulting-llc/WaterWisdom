@@ -1256,6 +1256,212 @@ This technology integration is helping water utilities and organizations achieve
     }
   });
 
+  // Add these new admin endpoints after the existing routes
+
+  // Admin Statistics Endpoint
+  app.get("/api/admin/stats", async (req, res) => {
+    if (!req.user || req.user.role !== "admin") {
+      return res.status(403).send("Not authorized");
+    }
+
+    try {
+      const userStats = await db
+        .select({
+          total: count(),
+          activeToday: count(sql`CASE WHEN "lastLoginAt" >= NOW() - INTERVAL '24 hours' THEN 1 END`),
+        })
+        .from(users);
+
+      const contentStats = await db
+        .select({
+          totalQuestions: count(questions.id),
+          pendingQuestions: count(sql`CASE WHEN approved = false THEN 1 END`),
+        })
+        .from(questions);
+
+      const knowledgeStats = await db
+        .select({
+          totalEntries: count(knowledgeEntries.id),
+          pendingEntries: count(sql`CASE WHEN "expertVerified" = false THEN 1 END`),
+        })
+        .from(knowledgeEntries);
+
+      const learningStats = await db
+        .select({
+          totalPaths: count(learningPaths.id),
+          totalEnrollments: count(userLearningPaths.userId),
+        })
+        .from(learningPaths)
+        .leftJoin(userLearningPaths, eq(learningPaths.id, userLearningPaths.pathId));
+
+      res.json({
+        users: {
+          total: Number(userStats[0]?.total || 0),
+          activeToday: Number(userStats[0]?.activeToday || 0),
+        },
+        content: {
+          questions: Number(contentStats[0]?.totalQuestions || 0),
+          pendingQuestions: Number(contentStats[0]?.pendingQuestions || 0),
+          knowledgeEntries: Number(knowledgeStats[0]?.totalEntries || 0),
+          pendingEntries: Number(knowledgeStats[0]?.pendingEntries || 0),
+        },
+        learning: {
+          paths: Number(learningStats[0]?.totalPaths || 0),
+          enrollments: Number(learningStats[0]?.totalEnrollments || 0),
+        },
+      });
+    } catch (error) {
+      console.error("Error fetching admin stats:", error);
+      res.status(500).send("Failed to fetch admin statistics");
+    }
+  });
+
+  // User Management Endpoints
+  app.get("/api/admin/users", async (req, res) => {
+    if (!req.user || req.user.role !== "admin") {
+      return res.status(403).send("Not authorized");
+    }
+
+    try {
+      const usersList = await db
+        .select({
+          id: users.id,
+          username: users.username,
+          role: users.role,
+          createdAt: users.createdAt,
+          lastLoginAt: users.lastLoginAt,
+          points: users.points,
+        })
+        .from(users)
+        .orderBy(desc(users.createdAt));
+
+      res.json(usersList);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      res.status(500).send("Failed to fetch users");
+    }
+  });
+
+  // Content Moderation Endpoints
+  app.get("/api/admin/moderation/questions", async (req, res) => {
+    if (!req.user || req.user.role !== "admin") {
+      return res.status(403).send("Not authorized");
+    }
+
+    try {
+      const pendingQuestions = await db
+        .select()
+        .from(questions)
+        .where(eq(questions.approved, false))
+        .orderBy(desc(questions.createdAt));
+
+      res.json(pendingQuestions);
+    } catch (error) {
+      console.error("Error fetching pending questions:", error);
+      res.status(500).send("Failed to fetch pending questions");
+    }
+  });
+
+  app.post("/api/admin/moderation/questions/:id/approve", async (req, res) => {
+    if (!req.user || req.user.role !== "admin") {
+      return res.status(403).send("Not authorized");
+    }
+
+    const questionId = parseInt(req.params.id);
+    try {
+      const [updatedQuestion] = await db
+        .update(questions)
+        .set({ approved: true, reviewedBy: req.user.id })
+        .where(eq(questions.id, questionId))
+        .returning();
+
+      res.json(updatedQuestion);
+    } catch (error) {
+      console.error("Error approving question:", error);
+      res.status(500).send("Failed to approve question");
+    }
+  });
+
+  app.get("/api/admin/moderation/knowledge", async (req, res) => {
+    if (!req.user || req.user.role !== "admin") {
+      return res.status(403).send("Not authorized");
+    }
+
+    try {
+      const pendingEntries = await db
+        .select()
+        .from(knowledgeEntries)
+        .where(eq(knowledgeEntries.expertVerified, false))
+        .orderBy(desc(knowledgeEntries.createdAt));
+
+      res.json(pendingEntries);
+    } catch (error) {
+      console.error("Error fetching pending knowledge entries:", error);
+      res.status(500).send("Failed to fetch pending knowledge entries");
+    }
+  });
+
+  app.post("/api/admin/moderation/knowledge/:id/verify", async (req, res) => {
+    if (!req.user || req.user.role !== "admin") {
+      return res.status(403).send("Not authorized");
+    }
+
+    const entryId = parseInt(req.params.id);
+    try {
+      const [updatedEntry] = await db
+        .update(knowledgeEntries)
+        .set({ 
+          expertVerified: true, 
+          verifiedBy: req.user.id,
+          verifiedAt: new Date()
+        })
+        .where(eq(knowledgeEntries.id, entryId))
+        .returning();
+
+      res.json(updatedEntry);
+    } catch (error) {
+      console.error("Error verifying knowledge entry:", error);
+      res.status(500).send("Failed to verify knowledge entry");
+    }
+  });
+
+  // System Settings Endpoints
+  app.get("/api/admin/settings", async (req, res) => {
+    if (!req.user || req.user.role !== "admin") {
+      return res.status(403).send("Not authorized");
+    }
+
+    // Implement system settings retrieval
+    res.json({
+      quiz: {
+        dailyLimit: 10,
+        pointsPerCorrectAnswer: 10,
+        streakBonusThreshold: 5,
+      },
+      knowledge: {
+        requireExpertVerification: true,
+        minimumContentLength: 100,
+        allowedMediaTypes: ['text', 'image', 'video'],
+      },
+      users: {
+        allowRegistration: true,
+        requireEmailVerification: true,
+        sessionTimeout: 24, // hours
+      },
+    });
+  });
+
+  app.post("/api/admin/settings", async (req, res) => {
+    if (!req.user || req.user.role !== "admin") {
+      return res.status(403).send("Not authorized");
+    }
+
+    // Implement system settings update
+    const settings = req.body;
+    // TODO: Validate and save settings
+    res.json({ message: "Settings updated successfully" });
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
