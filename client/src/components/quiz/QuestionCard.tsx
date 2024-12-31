@@ -295,7 +295,7 @@ export function QuestionCard({ question, onSubmit }: QuestionCardProps) {
                     {question.explanation}
                   </p>
                   <p className="text-xs text-blue-600 mt-4 italic">
-                    Question contributed by {contributorData ? contributorData.contributor.username : 'Unknown'} • Powered by Water.AI - All rights reserved 2024
+                    Question contributed by {contributorData ? contributorData.contributor.username : 'Unknown'} • Powered by One Water.AI - All rights reserved 2024
                   </p>
                 </motion.div>
               )}

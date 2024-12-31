@@ -18,7 +18,7 @@ export default function HomePage() {
           <div className="flex justify-center mb-4">
             <Droplets className="h-12 w-12 text-blue-500" />
           </div>
-          <CardTitle className="text-3xl mb-2">Welcome to Water Trivia</CardTitle>
+          <CardTitle className="text-3xl mb-2">Welcome to One Water.AI</CardTitle>
           <p className="text-muted-foreground">
             Dive into the fascinating world of water knowledge! Our interactive trivia platform is designed
             to help water sector professionals and enthusiasts deepen their understanding of water treatment,
