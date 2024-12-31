@@ -2,14 +2,10 @@ import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, RefreshCw, Twitter, Facebook, Linkedin } from 'lucide-react';
+import { Loader2, RefreshCw } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
-import {
-  TwitterShareButton,
-  FacebookShareButton,
-  LinkedinShareButton,
-} from 'react-share';
+import { ShareButtons } from '@/components/ui/ShareButtons';
 
 interface MicroLearningContent {
   title: string;
@@ -41,8 +37,8 @@ export default function MicroLearning() {
 
   const shareUrl = typeof window !== 'undefined' ? window.location.href : '';
   const shareText = content ? 
-    `${content.title}\n\n${content.content.slice(0, 150)}... \n\nPowered by One Water.AI` : 
-    'Check out this water industry insight from One Water.AI';
+    `${content.title}\n\nPowered by One Water Hub` : 
+    'Check out this water industry insight from One Water Hub';
   const shareTitle = content?.title || 'Water Industry Insights';
 
   if (error) {
@@ -74,32 +70,6 @@ export default function MicroLearning() {
             <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
           </Button>
         </div>
-
-        {/* Share section only shows when content is loaded */}
-        {content && (
-          <div className="flex gap-2 mt-4">
-            <TwitterShareButton url={shareUrl} title={shareText}>
-              <Button variant="outline" size="sm" className="gap-2">
-                <Twitter className="h-4 w-4" />
-                Share on Twitter
-              </Button>
-            </TwitterShareButton>
-
-            <LinkedinShareButton url={shareUrl} title={shareTitle} summary={shareText}>
-              <Button variant="outline" size="sm" className="gap-2">
-                <Linkedin className="h-4 w-4" />
-                Share on LinkedIn
-              </Button>
-            </LinkedinShareButton>
-
-            <FacebookShareButton url={shareUrl} hashtag="#OneWaterAI">
-              <Button variant="outline" size="sm" className="gap-2">
-                <Facebook className="h-4 w-4" />
-                Share on Facebook
-              </Button>
-            </FacebookShareButton>
-          </div>
-        )}
       </CardHeader>
 
       <CardContent>
@@ -129,10 +99,15 @@ export default function MicroLearning() {
         )}
       </CardContent>
 
-      <CardFooter className="text-sm text-muted-foreground flex justify-between items-center">
-        <p>Updated hourly</p>
-        <p className="font-medium">Powered by One Water.AI</p>
-      </CardFooter>
+      {content && (
+        <CardFooter className="flex flex-col gap-4">
+          <ShareButtons url={shareUrl} title={shareTitle} description={shareText} />
+          <div className="w-full flex justify-between items-center text-sm text-muted-foreground">
+            <p>Updated hourly</p>
+            <p className="font-medium">Powered by One Water Hub</p>
+          </div>
+        </CardFooter>
+      )}
     </Card>
   );
 }
