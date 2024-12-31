@@ -76,28 +76,33 @@ export function QuestionCard({ question, onSubmit }: QuestionCardProps) {
         )}
 
         {isAnswered && (
-          <div className={`mt-6 p-4 rounded-lg ${answer.toLowerCase() === question.correctAnswer.toLowerCase() ? 'bg-green-50' : 'bg-red-50'}`}>
-            <div className="flex items-start gap-3">
-              {answer.toLowerCase() === question.correctAnswer.toLowerCase() ? (
-                <CheckCircle2 className="h-5 w-5 text-green-500 mt-0.5" />
-              ) : (
-                <AlertCircle className="h-5 w-5 text-red-500 mt-0.5" />
-              )}
-              <div>
-                <h3 className={`font-semibold ${answer.toLowerCase() === question.correctAnswer.toLowerCase() ? 'text-green-700' : 'text-red-700'}`}>
-                  {answer.toLowerCase() === question.correctAnswer.toLowerCase() ? 'Correct Answer!' : 'Incorrect Answer'}
-                </h3>
-                <p className="text-sm mt-1">
-                  The correct answer is: <span className="font-medium">{question.correctAnswer}</span>
-                </p>
-                <div className="mt-4 p-4 bg-blue-50 rounded-lg">
-                  <div className="flex items-center gap-2 mb-2">
-                    <BookOpen className="h-5 w-5 text-blue-500" />
-                    <h4 className="font-medium text-blue-900">Learn More:</h4>
-                  </div>
-                  <p className="text-sm text-blue-800">{question.explanation}</p>
+          <div className="mt-6 space-y-4">
+            <div className={`p-4 rounded-lg ${answer.toLowerCase() === question.correctAnswer.toLowerCase() ? 'bg-green-50' : 'bg-red-50'}`}>
+              <div className="flex items-start gap-3">
+                {answer.toLowerCase() === question.correctAnswer.toLowerCase() ? (
+                  <CheckCircle2 className="h-5 w-5 text-green-500 mt-0.5" />
+                ) : (
+                  <AlertCircle className="h-5 w-5 text-red-500 mt-0.5" />
+                )}
+                <div>
+                  <h3 className={`font-semibold ${answer.toLowerCase() === question.correctAnswer.toLowerCase() ? 'text-green-700' : 'text-red-700'}`}>
+                    {answer.toLowerCase() === question.correctAnswer.toLowerCase() ? 'Correct Answer!' : 'Incorrect Answer'}
+                  </h3>
+                  <p className="text-sm mt-1">
+                    The correct answer is: <span className="font-medium">{question.correctAnswer}</span>
+                  </p>
                 </div>
               </div>
+            </div>
+
+            <div className="p-4 bg-blue-50 rounded-lg">
+              <div className="flex items-center gap-2 mb-2">
+                <BookOpen className="h-5 w-5 text-blue-500" />
+                <h4 className="font-medium text-blue-900">Learn More:</h4>
+              </div>
+              <p className="text-sm text-blue-800 leading-relaxed">
+                {question.explanation || "No explanation available for this question."}
+              </p>
             </div>
           </div>
         )}
