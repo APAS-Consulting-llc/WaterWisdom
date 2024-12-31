@@ -11,23 +11,41 @@ const INDUSTRY_TOPICS = [
   'climate change impacts on water resources'
 ];
 
-const CONTENT_PROMPT = `As a water industry expert, create a concise micro-learning module about the following topic. Include:
-1. Key concepts (2-3 bullet points)
-2. Recent developments or trends
-3. Practical applications
-4. A thought-provoking question for reflection
+const CONTENT_PROMPT = `Create a professional micro-learning module about the following water industry topic. Format your response in this structure (without markdown symbols):
 
-Keep the response structured and focused on professional development in the water sector.
+Title: [Topic Title]
+
+Key Concepts:
+• [First key concept]
+• [Second key concept]
+• [Third key concept]
+
+Recent Developments:
+[2-3 sentences about recent trends or developments]
+
+Practical Applications:
+[2-3 sentences about real-world applications]
+
+Reflection Question:
+[One thought-provoking question]
+
+Keep the content focused on professional development in the water sector.
 Topic: `;
 
 export async function generateMicroLearning(topic?: string): Promise<string> {
   try {
-    // If no topic provided, randomly select one
     const selectedTopic = topic || INDUSTRY_TOPICS[Math.floor(Math.random() * INDUSTRY_TOPICS.length)];
     const prompt = CONTENT_PROMPT + selectedTopic;
-    
+
     const content = await handleChatMessage(prompt);
-    return content;
+
+    // Clean up any remaining markdown artifacts
+    return content
+      .replace(/\*\*/g, '')
+      .replace(/\#\#/g, '')
+      .replace(/\*/g, '')
+      .replace(/\n{3,}/g, '\n\n')
+      .trim();
   } catch (error) {
     console.error('Error generating micro-learning content:', error);
     throw new Error('Failed to generate micro-learning content');

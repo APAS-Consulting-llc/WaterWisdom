@@ -2,10 +2,15 @@ import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, RefreshCw, Share2 } from 'lucide-react';
+import { Loader2, RefreshCw, Twitter, Facebook, Linkedin } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { motion, AnimatePresence } from 'framer-motion';
+import {
+  TwitterShareButton,
+  FacebookShareButton,
+  LinkedinShareButton,
+} from 'react-share';
 
 export default function MicroLearning() {
   const { toast } = useToast();
@@ -20,23 +25,9 @@ export default function MicroLearning() {
     setRefreshKey(prev => prev + 1);
   };
 
-  const handleShare = async () => {
-    try {
-      await navigator.share({
-        title: 'Water Industry Micro-Learning',
-        text: content,
-        url: window.location.href
-      });
-    } catch (error) {
-      if ((error as Error).name !== 'AbortError') {
-        toast({
-          title: 'Error',
-          description: 'Failed to share content',
-          variant: 'destructive',
-        });
-      }
-    }
-  };
+  const shareUrl = window.location.href;
+  const shareText = content ? `${content.substring(0, 200)}... \n\nPowered by WaterWisdom.AI` : '';
+  const shareTitle = 'Water Industry Insights';
 
   if (error) {
     return (
@@ -63,7 +54,7 @@ export default function MicroLearning() {
               <div className="flex items-center gap-2">
                 <CardTitle className="text-xl">Today's Learning</CardTitle>
                 <Badge variant="outline" className="text-xs">
-                  Water Industry Trends
+                  Water Industry Insights
                 </Badge>
               </div>
               <div className="flex gap-2">
@@ -75,15 +66,28 @@ export default function MicroLearning() {
                 >
                   <RefreshCw className="h-4 w-4" />
                 </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={handleShare}
-                  disabled={isLoading}
-                >
-                  <Share2 className="h-4 w-4" />
-                </Button>
               </div>
+            </div>
+            {/* Social Share Buttons */}
+            <div className="flex gap-2 mt-4">
+              <TwitterShareButton url={shareUrl} title={shareText}>
+                <Button variant="outline" size="sm" className="gap-2">
+                  <Twitter className="h-4 w-4" />
+                  Share on Twitter
+                </Button>
+              </TwitterShareButton>
+              <LinkedinShareButton url={shareUrl} title={shareTitle} summary={shareText}>
+                <Button variant="outline" size="sm" className="gap-2">
+                  <Linkedin className="h-4 w-4" />
+                  Share on LinkedIn
+                </Button>
+              </LinkedinShareButton>
+              <FacebookShareButton url={shareUrl} quote={shareText}>
+                <Button variant="outline" size="sm" className="gap-2">
+                  <Facebook className="h-4 w-4" />
+                  Share on Facebook
+                </Button>
+              </FacebookShareButton>
             </div>
           </CardHeader>
           <CardContent>
@@ -93,16 +97,60 @@ export default function MicroLearning() {
               </div>
             ) : (
               <div className="prose prose-slate dark:prose-invert max-w-none">
-                {content?.split('\n').map((line, index) => (
-                  <p key={index} className="my-2">
-                    {line}
-                  </p>
-                ))}
+                {content?.split('\n\n').map((section, index) => {
+                  if (section.startsWith('Title:')) {
+                    return <h2 key={index} className="text-2xl font-bold mb-4">{section.replace('Title:', '').trim()}</h2>;
+                  }
+                  if (section.startsWith('Key Concepts:')) {
+                    return (
+                      <div key={index} className="mb-6">
+                        <h3 className="text-lg font-semibold mb-2">Key Concepts</h3>
+                        <ul className="list-none pl-0">
+                          {section.replace('Key Concepts:', '')
+                            .split('•')
+                            .filter(item => item.trim())
+                            .map((item, i) => (
+                              <li key={i} className="flex items-center gap-2 mb-2">
+                                <span className="h-2 w-2 rounded-full bg-primary flex-shrink-0" />
+                                {item.trim()}
+                              </li>
+                            ))}
+                        </ul>
+                      </div>
+                    );
+                  }
+                  if (section.startsWith('Recent Developments:')) {
+                    return (
+                      <div key={index} className="mb-6">
+                        <h3 className="text-lg font-semibold mb-2">Recent Developments</h3>
+                        <p>{section.replace('Recent Developments:', '').trim()}</p>
+                      </div>
+                    );
+                  }
+                  if (section.startsWith('Practical Applications:')) {
+                    return (
+                      <div key={index} className="mb-6">
+                        <h3 className="text-lg font-semibold mb-2">Practical Applications</h3>
+                        <p>{section.replace('Practical Applications:', '').trim()}</p>
+                      </div>
+                    );
+                  }
+                  if (section.startsWith('Reflection Question:')) {
+                    return (
+                      <div key={index} className="mb-6 bg-primary/5 p-4 rounded-lg">
+                        <h3 className="text-lg font-semibold mb-2">Reflection Question</h3>
+                        <p className="italic">{section.replace('Reflection Question:', '').trim()}</p>
+                      </div>
+                    );
+                  }
+                  return <p key={index} className="mb-4">{section}</p>;
+                })}
               </div>
             )}
           </CardContent>
-          <CardFooter className="text-sm text-muted-foreground">
-            <p>Powered by AI • Updated hourly</p>
+          <CardFooter className="text-sm text-muted-foreground flex justify-between items-center">
+            <p>Updated hourly</p>
+            <p className="font-medium">Powered by WaterWisdom.AI</p>
           </CardFooter>
         </Card>
       </motion.div>
