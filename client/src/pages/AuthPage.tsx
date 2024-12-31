@@ -6,8 +6,9 @@ import { Droplets } from 'lucide-react';
 export default function AuthPage() {
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-blue-50 to-indigo-50 relative overflow-hidden">
-      {/* Animated background elements */}
+      {/* Animated water ripples */}
       <div className="absolute inset-0 overflow-hidden">
+        {/* Main radial gradient for water effect */}
         <motion.div
           className="absolute -inset-[10px] opacity-20"
           style={{
@@ -22,6 +23,8 @@ export default function AuthPage() {
             ease: "easeInOut"
           }}
         />
+
+        {/* Water droplet particles */}
         {Array.from({ length: 20 }).map((_, i) => (
           <motion.div
             key={i}
@@ -33,11 +36,39 @@ export default function AuthPage() {
             animate={{
               opacity: [0, 1, 0],
               scale: [0, 1.5, 0],
+              y: ['0vh', `${50 + Math.random() * 50}vh`],
+              x: [0, (Math.random() - 0.5) * 100],
             }}
             transition={{
               duration: 3 + Math.random() * 2,
               repeat: Infinity,
               delay: Math.random() * 2,
+            }}
+          />
+        ))}
+
+        {/* Additional water ripples */}
+        {Array.from({ length: 3 }).map((_, i) => (
+          <motion.div
+            key={`ripple-${i}`}
+            className="absolute rounded-full border-2 border-blue-300/20"
+            style={{
+              left: '50%',
+              top: '50%',
+              width: '20vw',
+              height: '20vw',
+              marginLeft: '-10vw',
+              marginTop: '-10vw',
+            }}
+            animate={{
+              scale: [1, 4],
+              opacity: [0.5, 0],
+            }}
+            transition={{
+              duration: 4,
+              repeat: Infinity,
+              delay: i * 1.3,
+              ease: "easeOut",
             }}
           />
         ))}
@@ -55,6 +86,7 @@ export default function AuthPage() {
               className="flex justify-center mb-4"
               animate={{ 
                 rotate: [0, 5, -5, 0],
+                y: [0, -5, 0]
               }}
               transition={{
                 duration: 6,
