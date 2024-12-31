@@ -10,6 +10,9 @@ export const users = pgTable("users", {
   role: text("role", { enum: ['user', 'admin'] }).notNull().default('user'),
   points: integer("points").notNull().default(0),
   streak: integer("streak").notNull().default(0),
+  phoneNumber: text("phone_number"),
+  smsNotificationsEnabled: boolean("sms_notifications_enabled").default(false),
+  lastNotificationSent: timestamp("last_notification_sent"),
   lastActiveAt: timestamp("last_active_at").defaultNow(),
   createdAt: timestamp("created_at").defaultNow(),
 });

@@ -5,6 +5,7 @@ import HomePage from './pages/HomePage';
 import QuizPage from './pages/QuizPage';
 import AdminPage from './pages/AdminPage';
 import ProfilePage from './pages/ProfilePage';
+import SettingsPage from './pages/settings';
 import SubmitQuestionPage from './pages/SubmitQuestionPage';
 import LearningPathsPage from './pages/LearningPathsPage';
 import ForumPage from './pages/ForumPage';
@@ -35,6 +36,7 @@ function App() {
           <Route path="/" component={HomePage} />
           <Route path="/quiz" component={QuizPage} />
           <Route path="/profile" component={ProfilePage} />
+          <Route path="/settings" component={SettingsPage} />
           <Route path="/submit-question" component={SubmitQuestionPage} />
           <Route path="/learning-paths" component={LearningPathsPage} />
           <Route path="/forum" component={ForumPage} />

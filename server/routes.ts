@@ -4,6 +4,7 @@ import { setupAuth } from "./auth";
 import { db } from "@db";
 import { questions, userProgress, achievements, users, learningPaths, userLearningPaths, forumPosts, forumComments, forumReactions } from "@db/schema";
 import { eq, and, count, avg, desc } from "drizzle-orm";
+import { startDailyQuizScheduler } from './services/schedulerService';
 
 type DifficultyLevel = 'beginner' | 'intermediate' | 'expert';
 
@@ -31,6 +32,32 @@ function calculateRecommendedDifficulty(
 
 export function registerRoutes(app: Express): Server {
   setupAuth(app);
+
+  // Start the daily quiz scheduler
+  startDailyQuizScheduler();
+
+  // SMS Preferences Management
+  app.post("/api/user/sms-preferences", async (req, res) => {
+    if (!req.user) {
+      return res.status(401).send("Not authenticated");
+    }
+
+    const { phoneNumber, enabled } = req.body;
+
+    try {
+      await db
+        .update(users)
+        .set({
+          phoneNumber,
+          smsNotificationsEnabled: enabled,
+        })
+        .where(eq(users.id, req.user.id));
+
+      res.json({ message: "SMS preferences updated successfully" });
+    } catch (error) {
+      res.status(500).send("Failed to update SMS preferences");
+    }
+  });
 
   // Get questions with adaptive difficulty
   app.get("/api/questions", async (req, res) => {
