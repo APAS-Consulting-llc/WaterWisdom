@@ -2,7 +2,7 @@ import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Link } from 'wouter';
 import { useUser } from '@/hooks/use-user';
-import { Droplets, Palette } from 'lucide-react';
+import { Droplets, Palette, UserCircle } from 'lucide-react';
 import DelphiProfile from '@/components/profile/DelphiProfile';
 import MicroLearning from '@/components/learning/MicroLearning';
 
@@ -35,6 +35,12 @@ export default function HomePage() {
               <Link href="/theme">
                 <Palette className="w-4 h-4 mr-2" />
                 Customize Theme
+              </Link>
+            </Button>
+            <Button asChild variant="outline" className="w-full" size="lg">
+              <Link href="/portfolio">
+                <UserCircle className="w-4 h-4 mr-2" />
+                Generate Portfolio
               </Link>
             </Button>
             {user && (
