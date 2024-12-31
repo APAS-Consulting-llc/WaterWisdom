@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useKnowledge } from '@/hooks/use-knowledge';
+import { useCollaboration } from '@/hooks/use-collaboration';
 import { useUser } from '@/hooks/use-user';
 import { Card, CardHeader, CardContent, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -11,7 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Loader2, ThumbsUp, History, Award } from 'lucide-react';
+import { Loader2, ThumbsUp, History, Award, Users } from 'lucide-react';
 import { format } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -31,8 +32,11 @@ export default function KnowledgeBasePage() {
   const { entries, loadingEntries, createEntry, vote } = useKnowledge();
   const { user } = useUser();
   const { toast } = useToast();
+  const [selectedEntryId, setSelectedEntryId] = useState<number | null>(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [selectedEntry, setSelectedEntry] = useState<number | null>(null);
+
+  const { isConnected, collaborators, sendEdit, updateCursor } = useCollaboration(selectedEntryId || 0);
 
   const form = useForm<z.infer<typeof createEntrySchema>>({
     resolver: zodResolver(createEntrySchema),
@@ -114,82 +118,90 @@ export default function KnowledgeBasePage() {
             Expert-verified water industry knowledge and best practices
           </p>
         </div>
-        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Award className="mr-2 h-4 w-4" />
-              Share Knowledge
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-lg">
-            <DialogHeader>
-              <DialogTitle>Share Your Knowledge</DialogTitle>
-            </DialogHeader>
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="title"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Title</FormLabel>
-                      <FormControl>
-                        <Input {...field} placeholder="A descriptive title for your knowledge entry" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="content"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Content</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          {...field}
-                          placeholder="Share your expertise and insights..."
-                          className="min-h-[200px]"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="category"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Category</FormLabel>
-                      <FormControl>
-                        <Input {...field} placeholder="e.g., Water Treatment" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="tags"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Tags (comma-separated)</FormLabel>
-                      <FormControl>
-                        <Input {...field} placeholder="e.g., conservation, technology" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <div className="flex justify-end">
-                  <Button type="submit">Share Knowledge</Button>
-                </div>
-              </form>
-            </Form>
-          </DialogContent>
-        </Dialog>
+        <div className="flex items-center gap-4">
+          {isConnected && (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Users className="h-4 w-4" />
+              <span>{collaborators.size} active collaborators</span>
+            </div>
+          )}
+          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <Award className="mr-2 h-4 w-4" />
+                Share Knowledge
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-lg">
+              <DialogHeader>
+                <DialogTitle>Share Your Knowledge</DialogTitle>
+              </DialogHeader>
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                  <FormField
+                    control={form.control}
+                    name="title"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Title</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="A descriptive title for your knowledge entry" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="content"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Content</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            {...field}
+                            placeholder="Share your expertise and insights..."
+                            className="min-h-[200px]"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="category"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Category</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="e.g., Water Treatment" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="tags"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Tags (comma-separated)</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="e.g., conservation, technology" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <div className="flex justify-end">
+                    <Button type="submit">Share Knowledge</Button>
+                  </div>
+                </form>
+              </Form>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       <div className="space-y-6">
@@ -201,7 +213,27 @@ export default function KnowledgeBasePage() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
             >
-              <Card>
+              <Card
+                className={`relative ${selectedEntryId === entry.id ? 'ring-2 ring-primary' : ''}`}
+                onClick={() => setSelectedEntryId(entry.id)}
+              >
+                {selectedEntryId === entry.id && Array.from(collaborators.values()).map((collaborator) => (
+                  collaborator.cursor && (
+                    <div
+                      key={collaborator.userId}
+                      className="absolute w-2 h-2 bg-blue-500 rounded-full transform -translate-x-1/2 -translate-y-1/2 pointer-events-none"
+                      style={{
+                        left: `${collaborator.cursor.ch}ch`,
+                        top: `${collaborator.cursor.line * 1.5}em`
+                      }}
+                    >
+                      <div className="absolute top-4 left-2 bg-blue-500 text-white text-xs py-1 px-2 rounded whitespace-nowrap">
+                        {collaborator.username}
+                      </div>
+                    </div>
+                  )
+                ))}
+
                 <CardHeader>
                   <div className="flex justify-between items-start">
                     <div>
@@ -221,7 +253,17 @@ export default function KnowledgeBasePage() {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="prose prose-slate dark:prose-invert max-w-none">
+                  <div
+                    className="prose prose-slate dark:prose-invert max-w-none"
+                    onMouseMove={(e) => {
+                      if (selectedEntryId === entry.id) {
+                        const rect = e.currentTarget.getBoundingClientRect();
+                        const line = Math.floor((e.clientY - rect.top) / 24);
+                        const ch = Math.floor((e.clientX - rect.left) / 8);
+                        updateCursor({ line, ch });
+                      }
+                    }}
+                  >
                     {entry.content}
                   </div>
                   <div className="mt-4 flex items-center gap-4">
@@ -294,6 +336,11 @@ export default function KnowledgeBasePage() {
                 <CardFooter className="text-sm text-muted-foreground">
                   <div className="flex items-center gap-2">
                     <span>Last updated: {format(new Date(entry.updatedAt), 'MMM d, yyyy')}</span>
+                    {collaborators.size > 0 && selectedEntryId === entry.id && (
+                      <span className="ml-4">
+                        {collaborators.size} {collaborators.size === 1 ? 'person' : 'people'} viewing
+                      </span>
+                    )}
                   </div>
                 </CardFooter>
               </Card>
