@@ -303,16 +303,36 @@ export const forumReactions = pgTable("forum_reactions", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Update the knowledgeEntries table to support multimedia content
 export const knowledgeEntries = pgTable("knowledge_entries", {
   id: serial("id").primaryKey(),
   title: text("title").notNull(),
   content: text("content").notNull(),
-  category: text("category").notNull(),
+  category: text("category", {
+    enum: [
+      'water_treatment',
+      'wastewater',
+      'stormwater',
+      'climate_change',
+      'blockchain',
+      'sustainability',
+      'infrastructure',
+      'emerging_contaminants',
+      'sea_level_rise'
+    ]
+  }).notNull(),
   tags: jsonb("tags").default([]),
   authorId: integer("author_id").references(() => users.id),
   expertVerified: boolean("expert_verified").default(false),
   score: integer("score").default(0),
   viewCount: integer("view_count").default(0),
+  // New fields for multimedia support
+  mediaType: text("media_type", { 
+    enum: ['text', 'image', 'video', 'loom'] 
+  }).notNull().default('text'),
+  mediaUrl: text("media_url"),
+  mediaThumbnail: text("media_thumbnail"),
+  mediaDuration: integer("media_duration"), // For videos, in seconds
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
