@@ -3,11 +3,27 @@ import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { relations } from "drizzle-orm";
 import { z } from 'zod';
 
+// Existing users table with additional professional networking fields
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").unique().notNull(),
   password: text("password").notNull(),
   role: text("role", { enum: ['user', 'admin'] }).notNull().default('user'),
+  // Professional profile fields
+  fullName: text("full_name"),
+  title: text("job_title"),
+  company: text("company"),
+  bio: text("bio"),
+  location: text("location"),
+  yearsOfExperience: integer("years_of_experience"),
+  specializations: jsonb("specializations").default([]),
+  website: text("website"),
+  linkedin: text("linkedin_url"),
+  twitter: text("twitter_url"),
+  profileVisibility: text("profile_visibility", { 
+    enum: ['public', 'connections', 'private'] 
+  }).default('public'),
+  // Existing fields...
   points: integer("points").notNull().default(0),
   streak: integer("streak").notNull().default(0),
   phoneNumber: text("phone_number"),
@@ -18,6 +34,159 @@ export const users = pgTable("users", {
   lastActiveAt: timestamp("last_active_at").defaultNow(),
   createdAt: timestamp("created_at").defaultNow(),
 });
+
+// New table for professional connections
+export const professionalConnections = pgTable("professional_connections", {
+  id: serial("id").primaryKey(),
+  requesterId: integer("requester_id").references(() => users.id).notNull(),
+  receiverId: integer("receiver_id").references(() => users.id).notNull(),
+  status: text("status", { 
+    enum: ['pending', 'accepted', 'rejected', 'blocked'] 
+  }).notNull().default('pending'),
+  message: text("connection_message"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Professional communities/groups
+export const professionalGroups = pgTable("professional_groups", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description").notNull(),
+  type: text("type", { 
+    enum: ['public', 'private', 'invite_only'] 
+  }).notNull().default('public'),
+  category: text("category").notNull(),
+  rules: jsonb("rules").default([]),
+  createdById: integer("created_by_id").references(() => users.id),
+  memberCount: integer("member_count").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Group memberships
+export const groupMemberships = pgTable("group_memberships", {
+  id: serial("id").primaryKey(),
+  groupId: integer("group_id").references(() => professionalGroups.id),
+  userId: integer("user_id").references(() => users.id),
+  role: text("role", { 
+    enum: ['member', 'moderator', 'admin'] 
+  }).notNull().default('member'),
+  joinedAt: timestamp("joined_at").defaultNow(),
+});
+
+// Professional messages
+export const professionalMessages = pgTable("professional_messages", {
+  id: serial("id").primaryKey(),
+  senderId: integer("sender_id").references(() => users.id),
+  receiverId: integer("receiver_id").references(() => users.id),
+  groupId: integer("group_id").references(() => professionalGroups.id),
+  content: text("content").notNull(),
+  attachments: jsonb("attachments").default([]),
+  isRead: boolean("is_read").default(false),
+  readAt: timestamp("read_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Add relations
+export const professionalConnectionsRelations = relations(professionalConnections, ({ one }) => ({
+  requester: one(users, {
+    fields: [professionalConnections.requesterId],
+    references: [users.id],
+  }),
+  receiver: one(users, {
+    fields: [professionalConnections.receiverId],
+    references: [users.id],
+  }),
+}));
+
+export const professionalGroupsRelations = relations(professionalGroups, ({ one, many }) => ({
+  creator: one(users, {
+    fields: [professionalGroups.createdById],
+    references: [users.id],
+  }),
+  memberships: many(groupMemberships),
+  messages: many(professionalMessages),
+}));
+
+export const groupMembershipsRelations = relations(groupMemberships, ({ one }) => ({
+  group: one(professionalGroups, {
+    fields: [groupMemberships.groupId],
+    references: [professionalGroups.id],
+  }),
+  user: one(users, {
+    fields: [groupMemberships.userId],
+    references: [users.id],
+  }),
+}));
+
+export const professionalMessagesRelations = relations(professionalMessages, ({ one }) => ({
+  sender: one(users, {
+    fields: [professionalMessages.senderId],
+    references: [users.id],
+  }),
+  receiver: one(users, {
+    fields: [professionalMessages.receiverId],
+    references: [users.id],
+  }),
+  group: one(professionalGroups, {
+    fields: [professionalMessages.groupId],
+    references: [professionalGroups.id],
+  }),
+}));
+
+// Update user relations
+export const userRelations = relations(users, ({ many }) => ({
+  sentConnections: many(professionalConnections, { relationName: "requester" }),
+  receivedConnections: many(professionalConnections, { relationName: "receiver" }),
+  groupMemberships: many(groupMemberships),
+  sentMessages: many(professionalMessages, { relationName: "sender" }),
+  receivedMessages: many(professionalMessages, { relationName: "receiver" }),
+  // Keep existing relations...
+  questions: many(questions),
+  progress: many(userProgress),
+  achievements: many(achievements),
+  learningPaths: many(userLearningPaths),
+  forumPosts: many(forumPosts),
+  forumComments: many(forumComments),
+  forumReactions: many(forumReactions),
+  badges: many(userBadges),
+  knowledgeEntries: many(knowledgeEntries),
+  knowledgeVotes: many(knowledgeVotes),
+  knowledgeRevisions: many(knowledgeRevisions),
+  newsletters: many(newsletters),
+  credentials: many(userCredentials),
+  publications: many(userPublications),
+  skills: many(userSkills),
+  givenEndorsements: many(skillEndorsements, { relationName: "endorser" }),
+  receivedEndorsements: many(skillEndorsements, { relationName: "endorsedUser" }),
+}));
+
+// Create Zod schemas for the new tables
+export const insertProfessionalConnectionSchema = createInsertSchema(professionalConnections);
+export const selectProfessionalConnectionSchema = createSelectSchema(professionalConnections);
+
+export const insertProfessionalGroupSchema = createInsertSchema(professionalGroups);
+export const selectProfessionalGroupSchema = createSelectSchema(professionalGroups);
+
+export const insertGroupMembershipSchema = createInsertSchema(groupMemberships);
+export const selectGroupMembershipSchema = createSelectSchema(groupMemberships);
+
+export const insertProfessionalMessageSchema = createInsertSchema(professionalMessages);
+export const selectProfessionalMessageSchema = createSelectSchema(professionalMessages);
+
+// Export types for the new tables
+export type ProfessionalConnection = typeof professionalConnections.$inferSelect;
+export type NewProfessionalConnection = typeof professionalConnections.$inferInsert;
+
+export type ProfessionalGroup = typeof professionalGroups.$inferSelect;
+export type NewProfessionalGroup = typeof professionalGroups.$inferInsert;
+
+export type GroupMembership = typeof groupMemberships.$inferSelect;
+export type NewGroupMembership = typeof groupMemberships.$inferInsert;
+
+export type ProfessionalMessage = typeof professionalMessages.$inferSelect;
+export type NewProfessionalMessage = typeof professionalMessages.$inferInsert;
 
 export const questions = pgTable("questions", {
   id: serial("id").primaryKey(),
@@ -243,26 +412,6 @@ export const skillEndorsements = pgTable("skill_endorsements", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-export const userRelations = relations(users, ({ many }) => ({
-  questions: many(questions),
-  progress: many(userProgress),
-  achievements: many(achievements),
-  learningPaths: many(userLearningPaths),
-  forumPosts: many(forumPosts),
-  forumComments: many(forumComments),
-  forumReactions: many(forumReactions),
-  badges: many(userBadges),
-  knowledgeEntries: many(knowledgeEntries),
-  knowledgeVotes: many(knowledgeVotes),
-  knowledgeRevisions: many(knowledgeRevisions),
-  newsletters: many(newsletters),
-  credentials: many(userCredentials),
-  publications: many(userPublications),
-  skills: many(userSkills),
-  givenEndorsements: many(skillEndorsements, { relationName: "endorser" }),
-  receivedEndorsements: many(skillEndorsements, { relationName: "endorsedUser" }),
-}));
-
 export const questionRelations = relations(questions, ({ one, many }) => ({
   creator: one(users, {
     fields: [questions.createdBy],
@@ -465,6 +614,17 @@ export const insertUserSchema = createInsertSchema(users, {
   smsNotificationsEnabled: z.boolean().optional(),
   preferredQuizTime: z.string().optional(),
   timezone: z.string().optional(),
+  fullName: z.string().optional(),
+  title: z.string().optional(),
+  company: z.string().optional(),
+  bio: z.string().optional(),
+  location: z.string().optional(),
+  yearsOfExperience: z.number().optional(),
+  specializations: z.array(z.string()).optional(),
+  website: z.string().optional(),
+  linkedin: z.string().optional(),
+  twitter: z.string().optional(),
+  profileVisibility: z.enum(['public', 'connections', 'private']).optional()
 });
 export const selectUserSchema = createSelectSchema(users);
 export const insertQuestionSchema = createInsertSchema(questions, {

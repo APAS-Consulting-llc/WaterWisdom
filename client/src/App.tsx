@@ -13,6 +13,7 @@ import LearningPathsPage from "./pages/LearningPathsPage";
 import ForumPage from "./pages/ForumPage";
 import ChatBoard from "./pages/ChatBoard";
 import KnowledgeBasePage from "./pages/KnowledgeBasePage";
+import CommunityPage from "./pages/CommunityPage";
 import ThemePage from "./pages/ThemePage";
 import { Navigation } from "./components/layout/Navigation";
 import { Loader2 } from "lucide-react";
@@ -48,6 +49,7 @@ function App() {
           <Route path="/forum" component={ForumPage} />
           <Route path="/chat" component={ChatBoard} />
           <Route path="/knowledge" component={KnowledgeBasePage} />
+          <Route path="/community" component={CommunityPage} />
           {user.role === 'admin' && (
             <Route path="/admin" component={AdminPage} />
           )}
@@ -61,6 +63,7 @@ function App() {
           </Route>
         </Switch>
       </main>
+      <Toaster />
     </div>
   );
 }

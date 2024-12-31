@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { setupAuth } from "./auth";
 import { db } from "@db";
-import { users, userCredentials, userPublications, questions, userProgress, achievements, learningPaths, userLearningPaths, forumPosts, forumComments, forumReactions, badges, userBadges, badgeCategories, knowledgeEntries, knowledgeVotes, knowledgeRevisions, userSkills, skillEndorsements } from "@db/schema";
+import { users, userCredentials, userPublications, questions, userProgress, achievements, learningPaths, userLearningPaths, forumPosts, forumComments, forumReactions, badges, userBadges, badgeCategories, knowledgeEntries, knowledgeVotes, knowledgeRevisions, userSkills, skillEndorsements, professionalGroups, professionalConnections, groupMemberships } from "@db/schema"; // Added new tables
 import { eq, and, count, avg, desc, sql } from "drizzle-orm";
 import CollaborationService from "./services/collaborationService";
 import { handleChatMessage } from './services/chatService';
@@ -1009,7 +1009,160 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Export server at the end
+  // Community networking routes
+  app.get("/api/professionals", async (req, res) => {
+    try {
+      const { search } = req.query;
+      let query = db.select().from(users);
+
+      if (search) {
+        query = query.where(sql`
+          full_name ILIKE ${`%${search}%`} OR
+          company ILIKE ${`%${search}%`} OR
+          specializations::text ILIKE ${`%${search}%`}
+        `);
+      }
+
+      const professionals = await query.orderBy(desc(users.lastActiveAt));
+
+      // Remove sensitive information
+      const sanitizedProfessionals = professionals.map(({ password, ...user }) => ({
+        ...user,
+        specializations: user.specializations || [],
+      }));
+
+      res.json(sanitizedProfessionals);
+    } catch (error) {
+      console.error("Error fetching professionals:", error);
+      res.status(500).send("Failed to fetch professionals");
+    }
+  });
+
+  app.get("/api/professional-groups", async (req, res) => {
+    try {
+      const groups = await db
+        .select()
+        .from(professionalGroups)
+        .orderBy(desc(professionalGroups.memberCount));
+
+      res.json(groups);
+    } catch (error) {
+      console.error("Error fetching professional groups:", error);
+      res.status(500).send("Failed to fetch professional groups");
+    }
+  });
+
+  app.post("/api/professional-connections", async (req, res) => {
+    if (!req.user) {
+      return res.status(401).send("Not authenticated");
+    }
+
+    try {
+      const { receiverId, message } = req.body;
+
+      // Check if connection already exists
+      const [existingConnection] = await db
+        .select()
+        .from(professionalConnections)
+        .where(
+          and(
+            eq(professionalConnections.requesterId, req.user.id),
+            eq(professionalConnections.receiverId, receiverId)
+          )
+        );
+
+      if (existingConnection) {
+        return res.status(400).send("Connection request already exists");
+      }
+
+      const [connection] = await db
+        .insert(professionalConnections)
+        .values({
+          requesterId: req.user.id,
+          receiverId,
+          message,
+        })
+        .returning();
+
+      res.json(connection);
+    } catch (error) {
+      console.error("Error creating connection:", error);
+      res.status(500).send("Failed to create connection");
+    }
+  });
+
+  app.post("/api/professional-groups", async (req, res) => {
+    if (!req.user) {
+      return res.status(401).send("Not authenticated");
+    }
+
+    try {
+      const [group] = await db
+        .insert(professionalGroups)
+        .values({
+          ...req.body,
+          createdById: req.user.id,
+        })
+        .returning();
+
+      // Add creator as admin member
+      await db.insert(groupMemberships).values({
+        groupId: group.id,
+        userId: req.user.id,
+        role: 'admin',
+      });
+
+      res.json(group);
+    } catch (error) {
+      console.error("Error creating group:", error);
+      res.status(500).send("Failed to create group");
+    }
+  });
+
+  app.post("/api/group-memberships", async (req, res) => {
+    if (!req.user) {
+      return res.status(401).send("Not authenticated");
+    }
+
+    try {
+      const { groupId } = req.body;
+
+      // Check if already a member
+      const [existingMembership] = await db
+        .select()
+        .from(groupMemberships)
+        .where(
+          and(
+            eq(groupMemberships.groupId, groupId),
+            eq(groupMemberships.userId, req.user.id)
+          )
+        );
+
+      if (existingMembership) {
+        return res.status(400).send("Already a member of this group");
+      }
+
+      const [membership] = await db
+        .insert(groupMemberships)
+        .values({
+          groupId,
+          userId: req.user.id,
+        })
+        .returning();
+
+      // Update member count
+      await db
+        .update(professionalGroups)
+        .set({ memberCount: sql`member_count + 1` })
+        .where(eq(professionalGroups.id, groupId));
+
+      res.json(membership);
+    } catch (error) {
+      console.error("Error joining group:", error);
+      res.status(500).send("Failed to join group");
+    }
+  });
+
   return httpServer;
 }
 
