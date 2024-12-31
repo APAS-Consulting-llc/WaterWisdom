@@ -15,6 +15,7 @@ import ChatBoard from "./pages/ChatBoard";
 import KnowledgeBasePage from "./pages/KnowledgeBasePage";
 import ThemePage from "./pages/ThemePage";
 import { Navigation } from "./components/layout/Navigation";
+import { PageTransition } from "./components/layout/PageTransition";
 import { Loader2 } from "lucide-react";
 import { Toaster } from "@/components/ui/toaster";
 
@@ -36,31 +37,33 @@ function App() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Navigation />
-      <main className="pt-16">
-        <Switch>
-          <Route path="/" component={HomePage} />
-          <Route path="/quiz" component={QuizPage} />
-          <Route path="/profile" component={ProfilePage} />
-          <Route path="/settings" component={SettingsPage} />
-          <Route path="/theme" component={ThemePage} />
-          <Route path="/submit-question" component={SubmitQuestionPage} />
-          <Route path="/learning-paths" component={LearningPathsPage} />
-          <Route path="/forum" component={ForumPage} />
-          <Route path="/chat" component={ChatBoard} />
-          <Route path="/knowledge" component={KnowledgeBasePage} />
-          {user.role === 'admin' && (
-            <Route path="/admin" component={AdminPage} />
-          )}
-          <Route>
-            {() => (
-              <div className="text-center py-12">
-                <h1 className="text-2xl font-bold text-gray-900">404 - Page Not Found</h1>
-                <p className="mt-2 text-gray-600">The page you're looking for doesn't exist.</p>
-              </div>
+      <PageTransition>
+        <main className="pt-16">
+          <Switch>
+            <Route path="/" component={HomePage} />
+            <Route path="/quiz" component={QuizPage} />
+            <Route path="/profile" component={ProfilePage} />
+            <Route path="/settings" component={SettingsPage} />
+            <Route path="/theme" component={ThemePage} />
+            <Route path="/submit-question" component={SubmitQuestionPage} />
+            <Route path="/learning-paths" component={LearningPathsPage} />
+            <Route path="/forum" component={ForumPage} />
+            <Route path="/chat" component={ChatBoard} />
+            <Route path="/knowledge" component={KnowledgeBasePage} />
+            {user.role === 'admin' && (
+              <Route path="/admin" component={AdminPage} />
             )}
-          </Route>
-        </Switch>
-      </main>
+            <Route>
+              {() => (
+                <div className="text-center py-12">
+                  <h1 className="text-2xl font-bold text-gray-900">404 - Page Not Found</h1>
+                  <p className="mt-2 text-gray-600">The page you're looking for doesn't exist.</p>
+                </div>
+              )}
+            </Route>
+          </Switch>
+        </main>
+      </PageTransition>
     </div>
   );
 }
