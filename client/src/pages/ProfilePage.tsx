@@ -3,7 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AchievementBadge } from '@/components/quiz/AchievementBadge';
 import { Progress } from '@/components/ui/progress';
 import { useUser } from '@/hooks/use-user';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Trophy, Target, Award, Brain } from 'lucide-react';
+import { ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
 export default function ProfilePage() {
   const { user } = useUser();
@@ -28,50 +29,127 @@ export default function ProfilePage() {
   const correctAnswers = progress?.filter(p => p.correct).length || 0;
   const accuracy = totalQuestions > 0 ? (correctAnswers / totalQuestions) * 100 : 0;
 
-  return (
-    <div className="max-w-4xl mx-auto py-8">
-      <div className="grid gap-8">
-        <Card>
-          <CardHeader>
-            <CardTitle>Profile Overview</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div>
-                <h3 className="text-lg font-medium">Points</h3>
-                <p className="text-3xl font-bold text-blue-500">{user?.points || 0}</p>
-              </div>
-              <div>
-                <h3 className="text-lg font-medium">Current Streak</h3>
-                <p className="text-3xl font-bold text-blue-500">{user?.streak || 0} 🔥</p>
-              </div>
-              <div>
-                <h3 className="text-lg font-medium">Accuracy</h3>
-                <Progress value={accuracy} className="h-2 mt-2" />
-                <p className="text-sm text-gray-600 mt-1">{accuracy.toFixed(1)}%</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+  // Calculate category statistics
+  const categoryStats = progress?.reduce((acc: Record<string, { total: number; correct: number }>, p) => {
+    const category = p.question?.category || 'Unknown';
+    if (!acc[category]) {
+      acc[category] = { total: 0, correct: 0 };
+    }
+    acc[category].total++;
+    if (p.correct) acc[category].correct++;
+    return acc;
+  }, {});
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Achievements</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {achievements?.map((achievement) => (
-                <AchievementBadge
-                  key={achievement.id}
-                  achievement={achievement}
-                />
-              ))}
-              {achievements?.length === 0 && (
-                <p className="text-gray-600">No achievements yet. Keep playing to earn badges!</p>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+  const pieData = Object.entries(categoryStats || {}).map(([category, stats]) => ({
+    name: category,
+    value: stats.total,
+  }));
+
+  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
+
+  return (
+    <div className="max-w-6xl mx-auto py-8 px-4">
+      <div className="grid gap-8 md:grid-cols-2">
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Performance Overview</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 gap-4 mb-6">
+                <div className="text-center p-4 bg-blue-50 rounded-lg">
+                  <Target className="h-8 w-8 mx-auto mb-2 text-blue-500" />
+                  <p className="text-sm text-blue-700">Accuracy</p>
+                  <p className="text-2xl font-bold text-blue-900">{accuracy.toFixed(1)}%</p>
+                </div>
+                <div className="text-center p-4 bg-green-50 rounded-lg">
+                  <Trophy className="h-8 w-8 mx-auto mb-2 text-green-500" />
+                  <p className="text-sm text-green-700">Current Streak</p>
+                  <p className="text-2xl font-bold text-green-900">{user?.streak || 0} 🔥</p>
+                </div>
+                <div className="text-center p-4 bg-purple-50 rounded-lg">
+                  <Award className="h-8 w-8 mx-auto mb-2 text-purple-500" />
+                  <p className="text-sm text-purple-700">Total Points</p>
+                  <p className="text-2xl font-bold text-purple-900">{user?.points || 0}</p>
+                </div>
+                <div className="text-center p-4 bg-orange-50 rounded-lg">
+                  <Brain className="h-8 w-8 mx-auto mb-2 text-orange-500" />
+                  <p className="text-sm text-orange-700">Questions Answered</p>
+                  <p className="text-2xl font-bold text-orange-900">{totalQuestions}</p>
+                </div>
+              </div>
+
+              <div className="mt-6">
+                <h3 className="text-lg font-medium mb-4">Category Progress</h3>
+                {Object.entries(categoryStats || {}).map(([category, stats], index) => (
+                  <div key={category} className="mb-4">
+                    <div className="flex justify-between text-sm mb-1">
+                      <span>{category}</span>
+                      <span>{((stats.correct / stats.total) * 100).toFixed(1)}% correct</span>
+                    </div>
+                    <Progress 
+                      value={(stats.correct / stats.total) * 100} 
+                      className="h-2"
+                      indicatorClassName={`bg-${COLORS[index % COLORS.length]}`}
+                    />
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Distribution by Category</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="h-[300px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={pieData}
+                      dataKey="value"
+                      nameKey="name"
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={80}
+                      label={({ name, percent }) => 
+                        `${name}: ${(percent * 100).toFixed(0)}%`
+                      }
+                    >
+                      {pieData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Achievements</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {achievements?.map((achievement) => (
+                  <AchievementBadge
+                    key={achievement.id}
+                    achievement={achievement}
+                  />
+                ))}
+                {achievements?.length === 0 && (
+                  <p className="text-gray-600 col-span-2 text-center py-8">
+                    No achievements yet. Keep playing to earn badges!
+                  </p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );
