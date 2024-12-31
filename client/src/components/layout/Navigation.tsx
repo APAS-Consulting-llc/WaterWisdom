@@ -55,34 +55,34 @@ export function Navigation() {
         </div>
 
         <DropdownMenu>
-          <DropdownMenuTrigger>
+          <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="relative">
               <User className="h-5 w-5" />
               <span className="ml-2">{user.username}</span>
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem asChild>
+          <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuItem>
               <Link href="/profile">
-                <Button variant="ghost" className="w-full justify-start">
+                <div className="flex w-full items-center">
                   <User className="mr-2 h-4 w-4" />
                   Profile
-                </Button>
+                </div>
               </Link>
             </DropdownMenuItem>
-            <DropdownMenuItem asChild>
+            <DropdownMenuItem>
               <Link href="/settings">
-                <Button variant="ghost" className="w-full justify-start">
+                <div className="flex w-full items-center">
                   <Settings className="mr-2 h-4 w-4" />
                   Settings
-                </Button>
+                </div>
               </Link>
             </DropdownMenuItem>
-            <DropdownMenuItem onSelect={() => logout()}>
-              <Button variant="ghost" className="w-full justify-start">
+            <DropdownMenuItem onClick={() => logout()}>
+              <div className="flex w-full items-center">
                 <LogOut className="mr-2 h-4 w-4" />
                 Logout
-              </Button>
+              </div>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
