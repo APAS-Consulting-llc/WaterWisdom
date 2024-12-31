@@ -31,6 +31,13 @@ function calculateRecommendedDifficulty(
   return currentDifficulty;
 }
 
+// Placeholder for getPersonalizedNews function.  Implementation details are needed.
+async function getPersonalizedNews(userId: number): Promise<any> {
+  // Replace this with actual news fetching logic
+  return [{ title: "News item 1", content: "News content 1" }, { title: "News item 2", content: "News content 2" }];
+}
+
+
 export function registerRoutes(app: Express): Server {
   setupAuth(app);
 
@@ -619,6 +626,21 @@ export function registerRoutes(app: Express): Server {
     } catch (error) {
       console.error("Error fetching contributor info:", error);
       res.status(500).send("Failed to fetch contributor information");
+    }
+  });
+
+  // Add this new endpoint
+  app.get("/api/news", async (req, res) => {
+    if (!req.user) {
+      return res.status(401).send("Not authenticated");
+    }
+
+    try {
+      const news = await getPersonalizedNews(req.user.id);
+      res.json(news);
+    } catch (error) {
+      console.error("Error fetching news:", error);
+      res.status(500).send("Failed to fetch news");
     }
   });
 
