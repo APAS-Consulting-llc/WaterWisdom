@@ -7,9 +7,11 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
+import { useUser } from '@/hooks/use-user';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import type { QuestionType, DifficultyLevel } from '@db/schema';
 
 const questionSchema = z.object({
   type: z.enum(['multiple_choice', 'true_false', 'short_answer']),
@@ -20,11 +22,14 @@ const questionSchema = z.object({
   correctAnswer: z.string().min(1)
 });
 
+type FormData = z.infer<typeof questionSchema>;
+
 export default function AdminPage() {
   const { createQuestion } = useQuiz();
+  const { user } = useUser();
   const { toast } = useToast();
 
-  const form = useForm<z.infer<typeof questionSchema>>({
+  const form = useForm<FormData>({
     resolver: zodResolver(questionSchema),
     defaultValues: {
       type: 'multiple_choice',
@@ -36,13 +41,15 @@ export default function AdminPage() {
     }
   });
 
-  const onSubmit = async (values: z.infer<typeof questionSchema>) => {
+  const onSubmit = async (values: FormData) => {
     try {
       const questionData = {
         ...values,
         options: values.type === 'multiple_choice' ? 
           values.options?.split('\n').filter(Boolean) : 
-          undefined
+          undefined,
+        createdBy: user?.id ?? null,
+        approved: user?.role === 'admin' // Auto-approve if admin
       };
 
       await createQuestion(questionData);
@@ -173,7 +180,7 @@ export default function AdminPage() {
                 )}
               />
 
-              <Button type="submit" className="w-full">Create Question</Button>
+              <Button type="submit" className="w-full ripple-button">Create Question</Button>
             </form>
           </Form>
         </CardContent>

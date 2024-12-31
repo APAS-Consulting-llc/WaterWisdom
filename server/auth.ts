@@ -30,7 +30,14 @@ const crypto = {
 
 declare global {
   namespace Express {
-    interface User extends User {}
+    // Extend express User type with our schema
+    interface User extends Omit<User, keyof User> {
+      id: number;
+      username: string;
+      role: 'user' | 'admin';
+      points: number;
+      streak: number;
+    }
   }
 }
 
@@ -131,7 +138,7 @@ export function setupAuth(app: Express) {
         .values({
           username,
           password: hashedPassword,
-          role: "user",
+          role: 'user',
         })
         .returning();
 
