@@ -2,8 +2,8 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { setupAuth } from "./auth";
 import { db } from "@db";
-import { questions, userProgress, achievements } from "@db/schema";
-import { eq, and } from "drizzle-orm";
+import { questions, userProgress, achievements, users } from "@db/schema";
+import { eq, and, count } from "drizzle-orm";
 
 export function registerRoutes(app: Express): Server {
   setupAuth(app);
@@ -121,6 +121,78 @@ export function registerRoutes(app: Express): Server {
       res.json(userAchievements);
     } catch (error) {
       res.status(500).send("Failed to fetch achievements");
+    }
+  });
+
+  // Check and award achievements
+  app.post("/api/achievements/check", async (req, res) => {
+    if (!req.user) {
+      return res.status(401).send("Not authenticated");
+    }
+
+    try {
+      const { points, streak, category, correctAnswers, totalQuestions } = req.body;
+      const newAchievements: typeof achievements.$inferInsert[] = [];
+
+      // Check for streak achievements
+      if (streak >= 5) {
+        newAchievements.push({
+          userId: req.user.id,
+          type: 'streak',
+          name: 'Hot Streak',
+          description: 'Answer 5 questions correctly in a row',
+          criteria: { streak: 5 },
+          progress: { streak },
+        });
+      }
+
+      // Check for points achievements
+      if (points >= 100) {
+        newAchievements.push({
+          userId: req.user.id,
+          type: 'points',
+          name: 'Point Master',
+          description: 'Earn 100 points',
+          criteria: { points: 100 },
+          progress: { points },
+        });
+      }
+
+      // Check for category mastery
+      if (category && correctAnswers === totalQuestions) {
+        newAchievements.push({
+          userId: req.user.id,
+          type: 'category_mastery',
+          name: `${category} Expert`,
+          description: `Master the ${category} category`,
+          criteria: { category, perfectScore: true },
+          progress: { category, correctAnswers, totalQuestions },
+        });
+      }
+
+      // Check for perfect score
+      if (correctAnswers === totalQuestions && totalQuestions >= 5) {
+        newAchievements.push({
+          userId: req.user.id,
+          type: 'perfect_score',
+          name: 'Perfect Quiz',
+          description: 'Complete a quiz with a perfect score',
+          criteria: { perfectScore: true },
+          progress: { correctAnswers, totalQuestions },
+        });
+      }
+
+      // Insert new achievements and update user points
+      if (newAchievements.length > 0) {
+        await db.insert(achievements).values(newAchievements);
+        await db.update(users)
+          .set({ points: points })
+          .where(eq(users.id, req.user.id));
+      }
+
+      res.json(newAchievements);
+    } catch (error) {
+      res.status(500).send("Failed to check achievements");
     }
   });
 

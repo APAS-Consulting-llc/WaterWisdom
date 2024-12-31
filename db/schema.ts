@@ -38,9 +38,11 @@ export const userProgress = pgTable("user_progress", {
 export const achievements = pgTable("achievements", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").references(() => users.id),
-  type: text("type", { enum: ['streak', 'points', 'category_mastery'] }).notNull(),
+  type: text("type", { enum: ['streak', 'points', 'category_mastery', 'quiz_completion', 'perfect_score'] }).notNull(),
   name: text("name").notNull(),
   description: text("description").notNull(),
+  criteria: jsonb("criteria"),
+  progress: jsonb("progress"),
   unlockedAt: timestamp("unlocked_at").defaultNow(),
 });
 
@@ -61,7 +63,7 @@ export const questionRelations = relations(questions, ({ one, many }) => ({
 export type QuestionType = 'multiple_choice' | 'true_false' | 'short_answer';
 export type DifficultyLevel = 'beginner' | 'intermediate' | 'expert';
 export type UserRole = 'user' | 'admin';
-export type AchievementType = 'streak' | 'points' | 'category_mastery';
+export type AchievementType = 'streak' | 'points' | 'category_mastery' | 'quiz_completion' | 'perfect_score';
 
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
@@ -77,3 +79,10 @@ export const insertQuestionSchema = createInsertSchema(questions, {
   difficulty: z.enum(['beginner', 'intermediate', 'expert']),
 });
 export const selectQuestionSchema = createSelectSchema(questions);
+
+export const achievementRelations = relations(achievements, ({ one }) => ({
+  user: one(users, {
+    fields: [achievements.userId],
+    references: [users.id],
+  }),
+}));
