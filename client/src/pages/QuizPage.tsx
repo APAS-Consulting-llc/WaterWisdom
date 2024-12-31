@@ -9,8 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import type { Question, DifficultyLevel } from '@db/schema';
 
 export default function QuizPage() {
-  const [category, setCategory] = useState<string>('');
-  const [difficulty, setDifficulty] = useState<DifficultyLevel | ''>('');
+  const [category, setCategory] = useState<string>('all');
+  const [difficulty, setDifficulty] = useState<DifficultyLevel | 'all'>('all');
   const { questions, isLoading, submitAnswer } = useQuiz();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [streak, setStreak] = useState(0);
@@ -34,7 +34,13 @@ export default function QuizPage() {
     );
   }
 
-  const currentQuestion: Question = questions[currentIndex];
+  const filteredQuestions = questions.filter(q => {
+    if (category !== 'all' && q.category !== category) return false;
+    if (difficulty !== 'all' && q.difficulty !== difficulty) return false;
+    return true;
+  });
+
+  const currentQuestion: Question = filteredQuestions[currentIndex];
 
   const calculatePoints = (difficulty: string, streakCount: number) => {
     const basePoints = {
@@ -73,7 +79,7 @@ export default function QuizPage() {
       }
 
       // Move to next question or end quiz
-      if (currentIndex < questions.length - 1) {
+      if (currentIndex < filteredQuestions.length - 1) {
         setCurrentIndex(prev => prev + 1);
       } else {
         toast({
@@ -105,19 +111,19 @@ export default function QuizPage() {
               <SelectValue placeholder="Select category" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Categories</SelectItem>
+              <SelectItem value="all">All Categories</SelectItem>
               {categories.map(cat => (
                 <SelectItem key={cat} value={cat}>{cat}</SelectItem>
               ))}
             </SelectContent>
           </Select>
 
-          <Select value={difficulty} onValueChange={(val) => setDifficulty(val as DifficultyLevel)}>
+          <Select value={difficulty} onValueChange={(val) => setDifficulty(val as DifficultyLevel | 'all')}>
             <SelectTrigger className="w-[200px]">
               <SelectValue placeholder="Select difficulty" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Difficulties</SelectItem>
+              <SelectItem value="all">All Difficulties</SelectItem>
               <SelectItem value="beginner">Beginner</SelectItem>
               <SelectItem value="intermediate">Intermediate</SelectItem>
               <SelectItem value="expert">Expert</SelectItem>
@@ -132,16 +138,18 @@ export default function QuizPage() {
 
       <ProgressBar
         current={currentIndex + 1}
-        total={questions.length}
+        total={filteredQuestions.length}
         streak={streak}
       />
 
       <div className="relative">
         <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-cyan-500/10 rounded-lg -z-10" />
-        <QuestionCard
-          question={currentQuestion}
-          onSubmit={handleSubmit}
-        />
+        {currentQuestion && (
+          <QuestionCard
+            question={currentQuestion}
+            onSubmit={handleSubmit}
+          />
+        )}
       </div>
     </div>
   );
