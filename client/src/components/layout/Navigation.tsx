@@ -23,30 +23,32 @@ export function Navigation() {
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         <div className="flex items-center space-x-6">
           <Link href="/">
-            <a className="flex items-center text-xl font-bold text-blue-500">
+            <Button variant="ghost" className="flex items-center text-xl font-bold text-blue-500 hover:bg-transparent">
               <Droplet className="w-6 h-6 mr-2" />
               WaterWisdom
-            </a>
+            </Button>
           </Link>
 
           <div className="flex space-x-4">
             {navItems.map(({ path, label, icon: Icon }) => (
               <Link key={path} href={path}>
-                <a className={`
-                  flex items-center gap-1.5
-                  ${location === path ? 'text-blue-500' : 'text-gray-600'} 
-                  hover:text-blue-500 cursor-pointer transition-colors
-                `}>
+                <Button 
+                  variant="ghost" 
+                  className={`flex items-center gap-1.5 ${location === path ? 'text-blue-500' : 'text-gray-600'} hover:text-blue-500`}
+                >
                   <Icon className="w-4 h-4" />
                   {label}
-                </a>
+                </Button>
               </Link>
             ))}
             {user.role === 'admin' && (
               <Link href="/admin">
-                <a className={`${location === '/admin' ? 'text-blue-500' : 'text-gray-600'} hover:text-blue-500 cursor-pointer`}>
+                <Button 
+                  variant="ghost" 
+                  className={`${location === '/admin' ? 'text-blue-500' : 'text-gray-600'} hover:text-blue-500`}
+                >
                   Admin
-                </a>
+                </Button>
               </Link>
             )}
           </div>
@@ -60,25 +62,27 @@ export function Navigation() {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <Link href="/profile">
-              <a className="w-full">
-                <DropdownMenuItem className="cursor-pointer">
+            <DropdownMenuItem asChild>
+              <Link href="/profile">
+                <Button variant="ghost" className="w-full justify-start">
                   <User className="mr-2 h-4 w-4" />
                   Profile
-                </DropdownMenuItem>
-              </a>
-            </Link>
-            <Link href="/settings">
-              <a className="w-full">
-                <DropdownMenuItem className="cursor-pointer">
+                </Button>
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link href="/settings">
+                <Button variant="ghost" className="w-full justify-start">
                   <Settings className="mr-2 h-4 w-4" />
                   Settings
-                </DropdownMenuItem>
-              </a>
-            </Link>
-            <DropdownMenuItem onSelect={() => logout()} className="cursor-pointer">
-              <LogOut className="mr-2 h-4 w-4" />
-              Logout
+                </Button>
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem onSelect={() => logout()}>
+              <Button variant="ghost" className="w-full justify-start">
+                <LogOut className="mr-2 h-4 w-4" />
+                Logout
+              </Button>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

@@ -1,8 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { AchievementBadge } from '@/components/quiz/AchievementBadge';
 import { Progress } from '@/components/ui/progress';
-import { SkillRadar, type Skill } from '@/components/profile/SkillRadar';
+import { SkillRadar } from '@/components/profile/SkillRadar';
 import { ShareButtons } from '@/components/ui/ShareButtons';
 import CredentialsManager from '@/components/profile/CredentialsManager';
 import ResumeGenerator from '@/components/profile/ResumeGenerator';
@@ -12,7 +11,7 @@ import { Loader2, Trophy, Target, Award, Brain } from 'lucide-react';
 import { ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
 // Sample skills data - in a real app, this would come from the API
-const skillsData: Skill[] = [
+const skillsData = [
   { subject: 'Water Treatment', level: 85, fullMark: 100 },
   { subject: 'Quality Control', level: 75, fullMark: 100 },
   { subject: 'Sustainability', level: 90, fullMark: 100 },
@@ -23,11 +22,11 @@ const skillsData: Skill[] = [
 export default function ProfilePage() {
   const { user } = useUser();
 
-  const { data: achievements, isLoading: loadingAchievements } = useQuery({
+  const { data: achievements = [], isLoading: loadingAchievements } = useQuery({
     queryKey: ['/api/achievements'],
   });
 
-  const { data: progress, isLoading: loadingProgress } = useQuery({
+  const { data: progress = [], isLoading: loadingProgress } = useQuery({
     queryKey: ['/api/progress'],
   });
 
@@ -40,7 +39,7 @@ export default function ProfilePage() {
   }
 
   const totalQuestions = progress?.length || 0;
-  const correctAnswers = progress?.filter((p: any) => p.correct).length || 0;
+  const correctAnswers = progress?.filter((p: any) => p.correct)?.length || 0;
   const accuracy = totalQuestions > 0 ? (correctAnswers / totalQuestions) * 100 : 0;
 
   // Calculate category statistics
@@ -52,9 +51,9 @@ export default function ProfilePage() {
     acc[category].total++;
     if (p.correct) acc[category].correct++;
     return acc;
-  }, {});
+  }, {}) || {};
 
-  const pieData = Object.entries(categoryStats || {}).map(([category, stats]) => ({
+  const pieData = Object.entries(categoryStats || {}).map(([category, stats]: [string, any]) => ({
     name: category,
     value: stats.total,
   }));
@@ -108,7 +107,7 @@ export default function ProfilePage() {
 
               <div className="mt-6">
                 <h3 className="text-lg font-medium mb-4">Category Progress</h3>
-                {Object.entries(categoryStats || {}).map(([category, stats], index) => (
+                {Object.entries(categoryStats || {}).map(([category, stats]: [string, any], index) => (
                   <div key={category} className="mb-4">
                     <div className="flex justify-between text-sm mb-1">
                       <span>{category}</span>
@@ -153,11 +152,11 @@ export default function ProfilePage() {
                       cx="50%"
                       cy="50%"
                       outerRadius={80}
-                      label={({ name, percent }) => 
+                      label={({ name, percent }: { name: string; percent: number }) => 
                         `${name}: ${(percent * 100).toFixed(0)}%`
                       }
                     >
-                      {pieData.map((entry, index) => (
+                      {pieData.map((_entry, index) => (
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                       ))}
                     </Pie>
@@ -183,12 +182,12 @@ export default function ProfilePage() {
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {achievements?.map((achievement: any) => (
-                  <AchievementBadge
-                    key={achievement.id}
-                    achievement={achievement}
-                  />
+                  <div key={achievement.id} className="p-4 bg-blue-50 rounded-lg">
+                    <h3 className="font-semibold">{achievement.name}</h3>
+                    <p className="text-sm text-gray-600">{achievement.description}</p>
+                  </div>
                 ))}
-                {achievements?.length === 0 && (
+                {(!achievements || achievements.length === 0) && (
                   <p className="text-gray-600 col-span-2 text-center py-8">
                     No achievements yet. Keep playing to earn badges!
                   </p>
