@@ -8,10 +8,27 @@ import "./index.css";
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
+      queryFn: async ({ queryKey }) => {
+        const response = await fetch(queryKey[0] as string, {
+          credentials: 'include',
+        });
+
+        if (!response.ok) {
+          if (response.status >= 500) {
+            throw new Error(`${response.status}: ${response.statusText}`);
+          }
+          throw new Error(`${response.status}: ${await response.text()}`);
+        }
+
+        return response.json();
+      },
       staleTime: 60 * 1000, // 1 minute
       refetchOnWindowFocus: false,
       retry: false,
     },
+    mutations: {
+      retry: false,
+    }
   },
 });
 
