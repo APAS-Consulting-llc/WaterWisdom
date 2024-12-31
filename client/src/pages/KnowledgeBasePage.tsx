@@ -13,10 +13,22 @@ import { useToast } from '@/hooks/use-toast';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Loader2, ThumbsUp, History, Award, Users, Video, Image as ImageIcon, Upload } from 'lucide-react';
+import { Loader2, ThumbsUp, History, Award, Users, Video, Image as ImageIcon, Upload, Share2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  FacebookShareButton,
+  TwitterShareButton,
+  LinkedinShareButton,
+  WhatsappShareButton,
+  EmailShareButton,
+  FacebookIcon,
+  TwitterIcon,
+  LinkedinIcon,
+  WhatsappIcon,
+  EmailIcon,
+} from 'react-share';
 
 const CATEGORIES = [
   { value: 'water_treatment', label: 'Water Treatment' },
@@ -48,6 +60,37 @@ const createEntrySchema = z.object({
   mediaType: z.enum(['text', 'image', 'video', 'loom']).default('text'),
   mediaUrl: z.string().optional(),
 });
+
+function ShareButtons({ entry }: { entry: any }) {
+  const shareUrl = `${window.location.origin}/knowledge/${entry.id}`;
+  const title = entry.title;
+  const iconSize = 32;
+  const round = true;
+
+  return (
+    <div className="flex space-x-2 items-center">
+      <FacebookShareButton url={shareUrl} quote={title}>
+        <FacebookIcon size={iconSize} round={round} />
+      </FacebookShareButton>
+
+      <TwitterShareButton url={shareUrl} title={title}>
+        <TwitterIcon size={iconSize} round={round} />
+      </TwitterShareButton>
+
+      <LinkedinShareButton url={shareUrl} title={title}>
+        <LinkedinIcon size={iconSize} round={round} />
+      </LinkedinShareButton>
+
+      <WhatsappShareButton url={shareUrl} title={title}>
+        <WhatsappIcon size={iconSize} round={round} />
+      </WhatsappShareButton>
+
+      <EmailShareButton url={shareUrl} subject={title}>
+        <EmailIcon size={iconSize} round={round} />
+      </EmailShareButton>
+    </div>
+  );
+}
 
 export default function KnowledgeBasePage() {
   const { entries, loadingEntries, createEntry, vote } = useKnowledge();
@@ -399,20 +442,29 @@ export default function KnowledgeBasePage() {
                       </div>
                     </CardContent>
                     <CardFooter className="border-t">
-                      <div className="w-full flex justify-between items-center text-sm text-muted-foreground">
-                        <div className="flex items-center gap-4">
+                      <div className="w-full space-y-4">
+                        <div className="flex justify-between items-center text-sm text-muted-foreground">
+                          <div className="flex items-center gap-4">
+                            <Button variant="ghost" size="sm" className="flex items-center gap-1">
+                              <ThumbsUp className="h-4 w-4" />
+                              <span>{entry.score || 0}</span>
+                            </Button>
+                            <Button variant="ghost" size="sm" className="flex items-center gap-1">
+                              <History className="h-4 w-4" />
+                              <span>{entry.viewCount || 0} views</span>
+                            </Button>
+                          </div>
+                          <span>
+                            Updated {format(new Date(entry.updatedAt), 'MMM d, yyyy')}
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <ShareButtons entry={entry} />
                           <Button variant="ghost" size="sm" className="flex items-center gap-1">
-                            <ThumbsUp className="h-4 w-4" />
-                            <span>{entry.score || 0}</span>
-                          </Button>
-                          <Button variant="ghost" size="sm" className="flex items-center gap-1">
-                            <History className="h-4 w-4" />
-                            <span>{entry.viewCount || 0} views</span>
+                            <Share2 className="h-4 w-4" />
+                            Share
                           </Button>
                         </div>
-                        <span>
-                          Updated {format(new Date(entry.updatedAt), 'MMM d, yyyy')}
-                        </span>
                       </div>
                     </CardFooter>
                   </Card>
@@ -480,20 +532,29 @@ export default function KnowledgeBasePage() {
                         </div>
                       </CardContent>
                       <CardFooter className="border-t">
-                        <div className="w-full flex justify-between items-center text-sm text-muted-foreground">
-                          <div className="flex items-center gap-4">
+                        <div className="w-full space-y-4">
+                          <div className="flex justify-between items-center text-sm text-muted-foreground">
+                            <div className="flex items-center gap-4">
+                              <Button variant="ghost" size="sm" className="flex items-center gap-1">
+                                <ThumbsUp className="h-4 w-4" />
+                                <span>{entry.score || 0}</span>
+                              </Button>
+                              <Button variant="ghost" size="sm" className="flex items-center gap-1">
+                                <History className="h-4 w-4" />
+                                <span>{entry.viewCount || 0} views</span>
+                              </Button>
+                            </div>
+                            <span>
+                              Updated {format(new Date(entry.updatedAt), 'MMM d, yyyy')}
+                            </span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <ShareButtons entry={entry} />
                             <Button variant="ghost" size="sm" className="flex items-center gap-1">
-                              <ThumbsUp className="h-4 w-4" />
-                              <span>{entry.score || 0}</span>
-                            </Button>
-                            <Button variant="ghost" size="sm" className="flex items-center gap-1">
-                              <History className="h-4 w-4" />
-                              <span>{entry.viewCount || 0} views</span>
+                              <Share2 className="h-4 w-4" />
+                              Share
                             </Button>
                           </div>
-                          <span>
-                            Updated {format(new Date(entry.updatedAt), 'MMM d, yyyy')}
-                          </span>
                         </div>
                       </CardFooter>
                     </Card>
