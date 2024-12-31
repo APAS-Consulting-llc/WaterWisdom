@@ -2,13 +2,21 @@ import { Link, useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { useUser } from '@/hooks/use-user';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { User, Settings, LogOut, Droplet } from 'lucide-react';
+import { User, Settings, LogOut, Droplet, BookOpen, MessageSquare, Users, Brain, Bot } from 'lucide-react';
 
 export function Navigation() {
   const { user, logout } = useUser();
   const [location] = useLocation();
 
   if (!user) return null;
+
+  const navItems = [
+    { path: '/quiz', label: 'Take Quiz', icon: BookOpen },
+    { path: '/knowledge', label: 'Expert Knowledge', icon: Brain },
+    { path: '/forum', label: 'Community Forum', icon: Users },
+    { path: '/learning-paths', label: 'Learning Paths', icon: MessageSquare },
+    { path: '/chat', label: 'AI Assistant', icon: Bot },
+  ];
 
   return (
     <nav className="w-full bg-white border-b px-4 py-2">
@@ -17,26 +25,25 @@ export function Navigation() {
           <Link href="/">
             <span className="flex items-center text-xl font-bold text-blue-500">
               <Droplet className="w-6 h-6 mr-2" />
-              WaterQuiz
+              WaterWisdom
             </span>
           </Link>
 
           <div className="flex space-x-4">
-            <Link href="/quiz">
-              <span className={`${location === '/quiz' ? 'text-blue-500' : 'text-gray-600'} hover:text-blue-500 cursor-pointer`}>
-                Take Quiz
-              </span>
-            </Link>
-            <Link href="/forum">
-              <span className={`${location === '/forum' ? 'text-blue-500' : 'text-gray-600'} hover:text-blue-500 cursor-pointer`}>
-                Community Forum
-              </span>
-            </Link>
-            <Link href="/learning-paths">
-              <span className={`${location === '/learning-paths' ? 'text-blue-500' : 'text-gray-600'} hover:text-blue-500 cursor-pointer`}>
-                Learning Paths
-              </span>
-            </Link>
+            {navItems.map(({ path, label, icon: Icon }) => (
+              <Link key={path} href={path}>
+                <span 
+                  className={`
+                    flex items-center gap-1.5
+                    ${location === path ? 'text-blue-500' : 'text-gray-600'} 
+                    hover:text-blue-500 cursor-pointer transition-colors
+                  `}
+                >
+                  <Icon className="w-4 h-4" />
+                  {label}
+                </span>
+              </Link>
+            ))}
             {user.role === 'admin' && (
               <Link href="/admin">
                 <span className={`${location === '/admin' ? 'text-blue-500' : 'text-gray-600'} hover:text-blue-500 cursor-pointer`}>
