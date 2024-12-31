@@ -8,6 +8,7 @@ import ProfilePage from "./pages/ProfilePage";
 import SettingsPage from "./pages/settings";
 import SubmitQuestionPage from "./pages/SubmitQuestionPage";
 import LearningPathsPage from "./pages/LearningPathsPage";
+import CareerPathPage from "./pages/CareerPathPage";
 import ForumPage from "./pages/ForumPage";
 import ChatBoard from "./pages/ChatBoard";
 import KnowledgeBasePage from "./pages/KnowledgeBasePage";
@@ -44,6 +45,7 @@ function App() {
           <Route path="/theme" component={ThemePage} />
           <Route path="/submit-question" component={SubmitQuestionPage} />
           <Route path="/learning-paths" component={LearningPathsPage} />
+          <Route path="/careers" component={CareerPathPage} />
           <Route path="/forum" component={ForumPage} />
           <Route path="/chat" component={ChatBoard} />
           <Route path="/knowledge" component={KnowledgeBasePage} />
