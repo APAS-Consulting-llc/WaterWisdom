@@ -118,17 +118,17 @@ export default function ForumPage() {
   return (
     <div className="max-w-4xl mx-auto py-8 px-4">
       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold text-foreground">Community Forum</h1>
+        <h1 className="text-3xl font-bold text-foreground">Water Industry Q&A Forum</h1>
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
             <Button>
               <MessageCircle className="mr-2 h-4 w-4" />
-              Start Discussion
+              Ask a Question
             </Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-lg">
             <DialogHeader>
-              <DialogTitle>Create New Discussion</DialogTitle>
+              <DialogTitle>Ask a Question</DialogTitle>
             </DialogHeader>
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -137,9 +137,9 @@ export default function ForumPage() {
                   name="title"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Title</FormLabel>
+                      <FormLabel>Question Title</FormLabel>
                       <FormControl>
-                        <Input {...field} placeholder="What would you like to discuss?" />
+                        <Input {...field} placeholder="What would you like to know about water industry?" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -150,12 +150,12 @@ export default function ForumPage() {
                   name="content"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Content</FormLabel>
+                      <FormLabel>Details</FormLabel>
                       <FormControl>
                         <Textarea
                           {...field}
-                          placeholder="Share your thoughts, questions, or insights..."
-                          className="min-h-[150px]"
+                          placeholder="Provide more context about your question..."
+                          className="min-h-[150px] bg-background text-foreground"
                         />
                       </FormControl>
                       <FormMessage />
@@ -169,14 +169,14 @@ export default function ForumPage() {
                     <FormItem>
                       <FormLabel>Tags (comma-separated)</FormLabel>
                       <FormControl>
-                        <Input {...field} placeholder="e.g., water-treatment, conservation" />
+                        <Input {...field} placeholder="e.g., water-treatment, conservation" className="bg-background text-foreground" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
                 <div className="flex justify-end">
-                  <Button type="submit">Create Discussion</Button>
+                  <Button type="submit">Post Question</Button>
                 </div>
               </form>
             </Form>
@@ -194,11 +194,11 @@ export default function ForumPage() {
               exit={{ opacity: 0, y: -20 }}
               className="transition-all duration-200"
             >
-              <Card className="bg-card hover:shadow-lg">
+              <Card className="hover:shadow-lg border border-border">
                 <CardHeader>
                   <div className="flex justify-between items-start">
                     <div>
-                      <CardTitle className="text-xl mb-2 text-foreground">{post.title}</CardTitle>
+                      <CardTitle className="text-xl mb-2">{post.title}</CardTitle>
                       <div className="flex items-center text-sm text-muted-foreground">
                         <span>Posted by {user?.id === post.authorId ? 'you' : 'Anonymous'}</span>
                         <span className="mx-2">•</span>
@@ -213,7 +213,7 @@ export default function ForumPage() {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-foreground/90 mb-4 whitespace-pre-wrap">{post.content}</p>
+                  <p className="text-foreground mb-4 whitespace-pre-wrap">{post.content}</p>
                   <div className="flex items-center gap-4">
                     <Button
                       variant="ghost"
@@ -264,9 +264,9 @@ export default function ForumPage() {
                           exit={{ opacity: 0, y: -10 }}
                           className="w-full"
                         >
-                          <Card className="w-full bg-muted/30">
+                          <Card className="w-full bg-muted/5 border border-border">
                             <CardContent className="pt-4">
-                              <p className="text-sm text-foreground/90">{comment.content}</p>
+                              <p className="text-foreground">{comment.content}</p>
                               <div className="mt-2 text-xs text-muted-foreground">
                                 <span>{user?.id === comment.authorId ? 'you' : 'Anonymous'}</span>
                                 <span className="mx-2">•</span>
@@ -291,7 +291,7 @@ export default function ForumPage() {
                                 <Input
                                   {...field}
                                   placeholder="Add a comment..."
-                                  className="bg-background"
+                                  className="bg-background text-foreground"
                                 />
                               </FormControl>
                             </FormItem>
