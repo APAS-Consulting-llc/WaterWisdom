@@ -1,190 +1,235 @@
 import { useState } from 'react';
+import { useAdmin } from '@/hooks/use-admin';
 import { useQuiz } from '@/hooks/use-quiz';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { useUser } from '@/hooks/use-user';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import type { QuestionType, DifficultyLevel } from '@db/schema';
-
-const questionSchema = z.object({
-  type: z.enum(['multiple_choice', 'true_false', 'short_answer']),
-  difficulty: z.enum(['beginner', 'intermediate', 'expert']),
-  category: z.string().min(1),
-  question: z.string().min(10),
-  options: z.string().optional(),
-  correctAnswer: z.string().min(1)
-});
-
-type FormData = z.infer<typeof questionSchema>;
+import { Loader2, Users, FileQuestion, BookOpen, Settings2, BarChart3 } from 'lucide-react';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 export default function AdminPage() {
-  const { createQuestion } = useQuiz();
-  const { user } = useUser();
+  const { stats, users, pendingQuestions, pendingKnowledge, loadingStats, loadingUsers, loadingPendingQuestions, loadingPendingKnowledge, approveQuestion, verifyKnowledge } = useAdmin();
   const { toast } = useToast();
+  const [activeTab, setActiveTab] = useState('overview');
 
-  const form = useForm<FormData>({
-    resolver: zodResolver(questionSchema),
-    defaultValues: {
-      type: 'multiple_choice',
-      difficulty: 'beginner',
-      category: '',
-      question: '',
-      options: '',
-      correctAnswer: ''
-    }
-  });
-
-  const onSubmit = async (values: FormData) => {
-    try {
-      const questionData = {
-        ...values,
-        options: values.type === 'multiple_choice' ? 
-          values.options?.split('\n').filter(Boolean) : 
-          undefined,
-        createdBy: user?.id ?? null,
-        approved: user?.role === 'admin' // Auto-approve if admin
-      };
-
-      await createQuestion(questionData);
-      form.reset();
-      toast({
-        title: 'Success',
-        description: 'Question created successfully',
-      });
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to create question',
-        variant: 'destructive'
-      });
-    }
-  };
+  if (loadingStats || loadingUsers || loadingPendingQuestions || loadingPendingKnowledge) {
+    return (
+      <div className="flex items-center justify-center min-h-[calc(100vh-4rem)]">
+        <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+      </div>
+    );
+  }
 
   return (
-    <div className="max-w-4xl mx-auto py-8">
-      <Card>
-        <CardHeader>
-          <CardTitle>Create New Question</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="type"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Question Type</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select question type" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="multiple_choice">Multiple Choice</SelectItem>
-                        <SelectItem value="true_false">True/False</SelectItem>
-                        <SelectItem value="short_answer">Short Answer</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+    <div className="container py-8">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+        <p className="text-muted-foreground">Manage One Water Hub platform resources and users</p>
+      </div>
 
-              <FormField
-                control={form.control}
-                name="difficulty"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Difficulty</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select difficulty" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="beginner">Beginner</SelectItem>
-                        <SelectItem value="intermediate">Intermediate</SelectItem>
-                        <SelectItem value="expert">Expert</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+      <Tabs defaultValue={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="grid grid-cols-5 w-full max-w-4xl mb-8">
+          <TabsTrigger value="overview" className="flex items-center gap-2">
+            <BarChart3 className="h-4 w-4" />
+            Overview
+          </TabsTrigger>
+          <TabsTrigger value="users" className="flex items-center gap-2">
+            <Users className="h-4 w-4" />
+            Users
+          </TabsTrigger>
+          <TabsTrigger value="questions" className="flex items-center gap-2">
+            <FileQuestion className="h-4 w-4" />
+            Questions
+          </TabsTrigger>
+          <TabsTrigger value="knowledge" className="flex items-center gap-2">
+            <BookOpen className="h-4 w-4" />
+            Knowledge Base
+          </TabsTrigger>
+          <TabsTrigger value="settings" className="flex items-center gap-2">
+            <Settings2 className="h-4 w-4" />
+            Settings
+          </TabsTrigger>
+        </TabsList>
 
-              <FormField
-                control={form.control}
-                name="category"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Category</FormLabel>
-                    <FormControl>
-                      <Input {...field} placeholder="e.g., Water Treatment" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+        <TabsContent value="overview">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <Card>
+              <CardHeader>
+                <CardTitle>Users</CardTitle>
+                <CardDescription>User activity statistics</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats?.users.total}</div>
+                <p className="text-xs text-muted-foreground">
+                  {stats?.users.activeToday} active today
+                </p>
+              </CardContent>
+            </Card>
 
-              <FormField
-                control={form.control}
-                name="question"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Question</FormLabel>
-                    <FormControl>
-                      <Textarea {...field} placeholder="Enter your question" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+            <Card>
+              <CardHeader>
+                <CardTitle>Content</CardTitle>
+                <CardDescription>Questions and knowledge entries</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  <div>
+                    <div className="text-2xl font-bold">{stats?.content.questions}</div>
+                    <p className="text-xs text-muted-foreground">
+                      {stats?.content.pendingQuestions} pending review
+                    </p>
+                  </div>
+                  <div>
+                    <div className="text-2xl font-bold">{stats?.content.knowledgeEntries}</div>
+                    <p className="text-xs text-muted-foreground">
+                      {stats?.content.pendingEntries} pending verification
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
-              {form.watch('type') === 'multiple_choice' && (
-                <FormField
-                  control={form.control}
-                  name="options"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Options (one per line)</FormLabel>
-                      <FormControl>
-                        <Textarea {...field} placeholder="Enter options, one per line" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              )}
+            <Card>
+              <CardHeader>
+                <CardTitle>Learning Paths</CardTitle>
+                <CardDescription>Course engagement metrics</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats?.learning.paths}</div>
+                <p className="text-xs text-muted-foreground">
+                  {stats?.learning.enrollments} total enrollments
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
 
-              <FormField
-                control={form.control}
-                name="correctAnswer"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Correct Answer</FormLabel>
-                    <FormControl>
-                      <Input {...field} placeholder="Enter the correct answer" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+        <TabsContent value="users">
+          <Card>
+            <CardHeader>
+              <CardTitle>User Management</CardTitle>
+              <CardDescription>View and manage platform users</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ScrollArea className="h-[400px]">
+                <div className="space-y-8">
+                  {users.map(user => (
+                    <div key={user.id} className="flex items-center justify-between">
+                      <div>
+                        <h4 className="font-medium">{user.username}</h4>
+                        <p className="text-sm text-muted-foreground">
+                          Role: {user.role} · Points: {user.points}
+                        </p>
+                      </div>
+                      <Button variant="outline">Manage</Button>
+                    </div>
+                  ))}
+                </div>
+              </ScrollArea>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-              <Button type="submit" className="w-full ripple-button">Create Question</Button>
-            </form>
-          </Form>
-        </CardContent>
-      </Card>
+        <TabsContent value="questions">
+          <Card>
+            <CardHeader>
+              <CardTitle>Question Moderation</CardTitle>
+              <CardDescription>Review and approve submitted questions</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ScrollArea className="h-[400px]">
+                <div className="space-y-8">
+                  {pendingQuestions.map(question => (
+                    <div key={question.id} className="space-y-2">
+                      <div>
+                        <h4 className="font-medium">Question Type: {question.type}</h4>
+                        <p className="text-sm">{question.question}</p>
+                        <p className="text-sm text-muted-foreground">
+                          Category: {question.category} · Difficulty: {question.difficulty}
+                        </p>
+                      </div>
+                      <Button onClick={() => approveQuestion(question.id)}>
+                        Approve Question
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </ScrollArea>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="knowledge">
+          <Card>
+            <CardHeader>
+              <CardTitle>Knowledge Base Moderation</CardTitle>
+              <CardDescription>Verify and manage knowledge entries</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ScrollArea className="h-[400px]">
+                <div className="space-y-8">
+                  {pendingKnowledge.map(entry => (
+                    <div key={entry.id} className="space-y-2">
+                      <div>
+                        <h4 className="font-medium">{entry.title}</h4>
+                        <p className="text-sm">{entry.content.substring(0, 200)}...</p>
+                        <p className="text-sm text-muted-foreground">
+                          Category: {entry.category}
+                        </p>
+                      </div>
+                      <Button onClick={() => verifyKnowledge(entry.id)}>
+                        Verify Entry
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </ScrollArea>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="settings">
+          <Card>
+            <CardHeader>
+              <CardTitle>System Settings</CardTitle>
+              <CardDescription>Configure platform settings and preferences</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div>
+                  <h4 className="font-medium mb-2">Quiz Settings</h4>
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div>
+                      <label className="text-sm">Daily Question Limit</label>
+                      <Input type="number" defaultValue={10} />
+                    </div>
+                    <div>
+                      <label className="text-sm">Points per Correct Answer</label>
+                      <Input type="number" defaultValue={10} />
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h4 className="font-medium mb-2">Knowledge Base Settings</h4>
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div>
+                      <label className="text-sm">Minimum Content Length</label>
+                      <Input type="number" defaultValue={100} />
+                    </div>
+                    <div>
+                      <label className="text-sm">Require Expert Verification</label>
+                      <Input type="checkbox" defaultChecked />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
