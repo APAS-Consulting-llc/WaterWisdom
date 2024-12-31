@@ -16,7 +16,6 @@ export function Navigation() {
     { path: '/forum', label: 'Community Forum', icon: Users },
     { path: '/learning-paths', label: 'Learning Paths', icon: MessageSquare },
     { path: '/chat', label: 'AI Assistant', icon: Bot },
-    ...(user.role === 'admin' ? [{ path: '/admin', label: 'Admin Dashboard', icon: Layout }] : []),
   ];
 
   const handleLogout = async () => {
@@ -65,22 +64,33 @@ export function Navigation() {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
-            <Button variant="ghost" className="w-full justify-start" asChild>
-              <Link href="/profile">
+            <DropdownMenuItem asChild>
+              <Link href="/profile" className="flex items-center w-full">
                 <User className="mr-2 h-4 w-4" />
                 Profile
               </Link>
-            </Button>
-            <Button variant="ghost" className="w-full justify-start" asChild>
-              <Link href="/settings">
+            </DropdownMenuItem>
+
+            {user.role === 'admin' && (
+              <DropdownMenuItem asChild>
+                <Link href="/admin" className="flex items-center w-full">
+                  <Layout className="mr-2 h-4 w-4" />
+                  Admin Dashboard
+                </Link>
+              </DropdownMenuItem>
+            )}
+
+            <DropdownMenuItem asChild>
+              <Link href="/settings" className="flex items-center w-full">
                 <Settings className="mr-2 h-4 w-4" />
                 Settings
               </Link>
-            </Button>
-            <Button variant="ghost" className="w-full justify-start" onClick={handleLogout}>
+            </DropdownMenuItem>
+
+            <DropdownMenuItem onClick={handleLogout}>
               <LogOut className="mr-2 h-4 w-4" />
               Logout
-            </Button>
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
