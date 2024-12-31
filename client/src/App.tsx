@@ -7,6 +7,7 @@ import AdminPage from './pages/AdminPage';
 import ProfilePage from './pages/ProfilePage';
 import SubmitQuestionPage from './pages/SubmitQuestionPage';
 import LearningPathsPage from './pages/LearningPathsPage';
+import ForumPage from './pages/ForumPage';
 import { Navigation } from './components/layout/Navigation';
 import { Loader2 } from 'lucide-react';
 import './styles/animations.css';
@@ -36,6 +37,7 @@ function App() {
           <Route path="/profile" component={ProfilePage} />
           <Route path="/submit-question" component={SubmitQuestionPage} />
           <Route path="/learning-paths" component={LearningPathsPage} />
+          <Route path="/forum" component={ForumPage} />
           {user.role === 'admin' && (
             <Route path="/admin" component={AdminPage} />
           )}

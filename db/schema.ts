@@ -19,12 +19,12 @@ export const questions = pgTable("questions", {
   type: text("type", { enum: ['multiple_choice', 'true_false', 'short_answer'] }).notNull(),
   difficulty: text("difficulty", { enum: ['beginner', 'intermediate', 'expert'] }).notNull(),
   category: text("category").notNull(),
-  topic: text("topic").notNull().default('general'), // Added default to prevent data loss
+  topic: text("topic").notNull().default('general'),
   question: text("question").notNull(),
   options: jsonb("options"),
   correctAnswer: text("correct_answer").notNull(),
   explanation: text("explanation").notNull(),
-  references: text("references").default(''), // Added default
+  references: text("references").default(''),
   createdBy: integer("created_by").references(() => users.id),
   approved: boolean("approved").notNull().default(false),
   createdAt: timestamp("created_at").defaultNow(),
@@ -35,7 +35,7 @@ export const userProgress = pgTable("user_progress", {
   userId: integer("user_id").references(() => users.id),
   questionId: integer("question_id").references(() => questions.id),
   correct: boolean("correct").notNull(),
-  timeSpent: integer("time_spent").default(0), // Added default
+  timeSpent: integer("time_spent").default(0),
   answeredAt: timestamp("answered_at").defaultNow(),
 });
 
@@ -45,8 +45,8 @@ export const learningPaths = pgTable("learning_paths", {
   description: text("description").notNull(),
   topics: jsonb("topics").notNull(),
   difficulty: text("difficulty", { enum: ['beginner', 'intermediate', 'expert'] }).notNull(),
-  prerequisites: jsonb("prerequisites").default([]), // Added default
-  estimatedHours: integer("estimated_hours").default(1), // Added default
+  prerequisites: jsonb("prerequisites").default([]),
+  estimatedHours: integer("estimated_hours").default(1),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -54,7 +54,7 @@ export const userLearningPaths = pgTable("user_learning_paths", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").references(() => users.id),
   pathId: integer("path_id").references(() => learningPaths.id),
-  progress: jsonb("progress").notNull().default({}), // Added default
+  progress: jsonb("progress").notNull().default({}),
   startedAt: timestamp("started_at").defaultNow(),
   completedAt: timestamp("completed_at"),
 });
@@ -65,9 +65,42 @@ export const achievements = pgTable("achievements", {
   type: text("type", { enum: ['streak', 'points', 'category_mastery', 'quiz_completion', 'perfect_score', 'path_completion'] }).notNull(),
   name: text("name").notNull(),
   description: text("description").notNull(),
-  criteria: jsonb("criteria").default({}), // Added default
-  progress: jsonb("progress").default({}), // Added default
+  criteria: jsonb("criteria").default({}),
+  progress: jsonb("progress").default({}),
   unlockedAt: timestamp("unlocked_at").defaultNow(),
+});
+
+// New forum-related tables
+export const forumPosts = pgTable("forum_posts", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  content: text("content").notNull(),
+  authorId: integer("author_id").references(() => users.id),
+  questionId: integer("question_id").references(() => questions.id),
+  tags: jsonb("tags").default([]),
+  views: integer("views").notNull().default(0),
+  pinned: boolean("pinned").notNull().default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const forumComments = pgTable("forum_comments", {
+  id: serial("id").primaryKey(),
+  content: text("content").notNull(),
+  authorId: integer("author_id").references(() => users.id),
+  postId: integer("post_id").references(() => forumPosts.id),
+  parentId: integer("parent_id").references(() => forumComments.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const forumReactions = pgTable("forum_reactions", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id),
+  postId: integer("post_id").references(() => forumPosts.id),
+  commentId: integer("comment_id").references(() => forumComments.id),
+  type: text("type", { enum: ['like', 'helpful', 'insightful'] }).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
 // Relations
@@ -76,6 +109,9 @@ export const userRelations = relations(users, ({ many }) => ({
   progress: many(userProgress),
   achievements: many(achievements),
   learningPaths: many(userLearningPaths),
+  forumPosts: many(forumPosts),
+  forumComments: many(forumComments),
+  forumReactions: many(forumReactions),
 }));
 
 export const questionRelations = relations(questions, ({ one, many }) => ({
@@ -108,6 +144,36 @@ export const achievementRelations = relations(achievements, ({ one }) => ({
   }),
 }));
 
+export const forumPostRelations = relations(forumPosts, ({ one, many }) => ({
+  author: one(users, {
+    fields: [forumPosts.authorId],
+    references: [users.id],
+  }),
+  question: one(questions, {
+    fields: [forumPosts.questionId],
+    references: [questions.id],
+  }),
+  comments: many(forumComments),
+  reactions: many(forumReactions),
+}));
+
+export const forumCommentRelations = relations(forumComments, ({ one, many }) => ({
+  author: one(users, {
+    fields: [forumComments.authorId],
+    references: [users.id],
+  }),
+  post: one(forumPosts, {
+    fields: [forumComments.postId],
+    references: [forumPosts.id],
+  }),
+  parent: one(forumComments, {
+    fields: [forumComments.parentId],
+    references: [forumComments.id],
+  }),
+  reactions: many(forumReactions),
+}));
+
+
 // Types
 export type QuestionType = 'multiple_choice' | 'true_false' | 'short_answer';
 export type DifficultyLevel = 'beginner' | 'intermediate' | 'expert';
@@ -123,6 +189,12 @@ export type UserProgress = typeof userProgress.$inferSelect;
 export type Achievement = typeof achievements.$inferSelect;
 export type LearningPath = typeof learningPaths.$inferSelect;
 export type UserLearningPath = typeof userLearningPaths.$inferSelect;
+export type ForumPost = typeof forumPosts.$inferSelect;
+export type NewForumPost = typeof forumPosts.$inferInsert;
+export type ForumComment = typeof forumComments.$inferSelect;
+export type NewForumComment = typeof forumComments.$inferInsert;
+export type ForumReaction = typeof forumReactions.$inferSelect;
+export type NewForumReaction = typeof forumReactions.$inferInsert;
 
 // Schemas
 export const insertUserSchema = createInsertSchema(users);
@@ -136,3 +208,9 @@ export const insertLearningPathSchema = createInsertSchema(learningPaths, {
   difficulty: z.enum(['beginner', 'intermediate', 'expert']),
 });
 export const selectLearningPathSchema = createSelectSchema(learningPaths);
+export const insertForumPostSchema = createInsertSchema(forumPosts);
+export const selectForumPostSchema = createSelectSchema(forumPosts);
+export const insertForumCommentSchema = createInsertSchema(forumComments);
+export const selectForumCommentSchema = createSelectSchema(forumComments);
+export const insertForumReactionSchema = createInsertSchema(forumReactions);
+export const selectForumReactionSchema = createSelectSchema(forumReactions);

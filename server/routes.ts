@@ -2,8 +2,8 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { setupAuth } from "./auth";
 import { db } from "@db";
-import { questions, userProgress, achievements, users, learningPaths, userLearningPaths } from "@db/schema";
-import { eq, and, count, avg } from "drizzle-orm";
+import { questions, userProgress, achievements, users, learningPaths, userLearningPaths, forumPosts, forumComments, forumReactions } from "@db/schema";
+import { eq, and, count, avg, desc } from "drizzle-orm";
 
 type DifficultyLevel = 'beginner' | 'intermediate' | 'expert';
 
@@ -354,6 +354,169 @@ export function registerRoutes(app: Express): Server {
       res.json(enrollment);
     } catch (error) {
       res.status(500).send("Failed to enroll in learning path");
+    }
+  });
+
+  // Forum Routes
+  // Get all forum posts
+  app.get("/api/forum/posts", async (req, res) => {
+    try {
+      const posts = await db
+        .select()
+        .from(forumPosts)
+        .orderBy(desc(forumPosts.pinned), desc(forumPosts.createdAt));
+
+      // Get reactions count for each post
+      const postsWithReactions = await Promise.all(posts.map(async (post) => {
+        const reactions = await db
+          .select({
+            type: forumReactions.type,
+            count: count(),
+          })
+          .from(forumReactions)
+          .where(eq(forumReactions.postId, post.id))
+          .groupBy(forumReactions.type);
+
+        const comments = await db
+          .select()
+          .from(forumComments)
+          .where(eq(forumComments.postId, post.id));
+
+        return {
+          ...post,
+          reactions: Object.fromEntries(
+            reactions.map(r => [r.type, Number(r.count)])
+          ),
+          comments,
+        };
+      }));
+
+      res.json(postsWithReactions);
+    } catch (error) {
+      res.status(500).send("Failed to fetch forum posts");
+    }
+  });
+
+  // Create forum post
+  app.post("/api/forum/posts", async (req, res) => {
+    if (!req.user) {
+      return res.status(401).send("Not authenticated");
+    }
+
+    try {
+      const [post] = await db
+        .insert(forumPosts)
+        .values({
+          ...req.body,
+          authorId: req.user.id,
+        })
+        .returning();
+
+      res.json(post);
+    } catch (error) {
+      res.status(500).send("Failed to create forum post");
+    }
+  });
+
+  // Get comments for a post
+  app.get("/api/forum/posts/:postId/comments", async (req, res) => {
+    const postId = parseInt(req.params.postId);
+
+    try {
+      const comments = await db
+        .select()
+        .from(forumComments)
+        .where(eq(forumComments.postId, postId))
+        .orderBy(desc(forumComments.createdAt));
+
+      const commentsWithReactions = await Promise.all(comments.map(async (comment) => {
+        const reactions = await db
+          .select({
+            type: forumReactions.type,
+            count: count(),
+          })
+          .from(forumReactions)
+          .where(eq(forumReactions.commentId, comment.id))
+          .groupBy(forumReactions.type);
+
+        return {
+          ...comment,
+          reactions: Object.fromEntries(
+            reactions.map(r => [r.type, Number(r.count)])
+          ),
+        };
+      }));
+
+      res.json(commentsWithReactions);
+    } catch (error) {
+      res.status(500).send("Failed to fetch comments");
+    }
+  });
+
+  // Create comment
+  app.post("/api/forum/comments", async (req, res) => {
+    if (!req.user) {
+      return res.status(401).send("Not authenticated");
+    }
+
+    try {
+      const [comment] = await db
+        .insert(forumComments)
+        .values({
+          ...req.body,
+          authorId: req.user.id,
+        })
+        .returning();
+
+      res.json(comment);
+    } catch (error) {
+      res.status(500).send("Failed to create comment");
+    }
+  });
+
+  // Add reaction
+  app.post("/api/forum/reactions", async (req, res) => {
+    if (!req.user) {
+      return res.status(401).send("Not authenticated");
+    }
+
+    const { type, postId, commentId } = req.body;
+
+    try {
+      // Check if user already reacted
+      const [existingReaction] = await db
+        .select()
+        .from(forumReactions)
+        .where(
+          and(
+            eq(forumReactions.userId, req.user.id),
+            postId ? eq(forumReactions.postId, postId) : eq(forumReactions.commentId, commentId),
+            eq(forumReactions.type, type)
+          )
+        );
+
+      if (existingReaction) {
+        // Remove reaction if it exists
+        await db
+          .delete(forumReactions)
+          .where(eq(forumReactions.id, existingReaction.id));
+        return res.json({ removed: true });
+      }
+
+      // Add new reaction
+      const [reaction] = await db
+        .insert(forumReactions)
+        .values({
+          type,
+          postId,
+          commentId,
+          userId: req.user.id,
+        })
+        .returning();
+
+      res.json(reaction);
+    } catch (error) {
+      res.status(500).send("Failed to add reaction");
     }
   });
 
