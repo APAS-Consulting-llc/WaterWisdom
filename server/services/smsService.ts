@@ -16,7 +16,7 @@ export async function sendSMS(
       to,
       from: process.env.TWILIO_PHONE_NUMBER,
     });
-    
+
     return message;
   } catch (error) {
     console.error('Error sending SMS:', error);
@@ -24,19 +24,28 @@ export async function sendSMS(
   }
 }
 
-export async function formatQuizMessage(question: {
-  text: string;
+export async function formatQuizMessage({
+  question,
+  options,
+  type
+}: {
+  question: string;
   options?: string[];
+  type: string;
 }): Promise<string> {
-  let message = `🌊 Daily Water Quiz!\n\n${question.text}`;
-  
-  if (question.options) {
+  let message = `🌊 Daily Water Quiz!\n\n${question}`;
+
+  if (type === 'multiple_choice' && options) {
     message += '\n\nOptions:';
-    question.options.forEach((option, index) => {
+    options.forEach((option, index) => {
       message += `\n${String.fromCharCode(65 + index)}) ${option}`;
     });
     message += '\n\nReply with the letter of your answer!';
+  } else if (type === 'true_false') {
+    message += '\n\nReply with TRUE or FALSE';
+  } else {
+    message += '\n\nReply with your answer!';
   }
-  
+
   return message;
 }

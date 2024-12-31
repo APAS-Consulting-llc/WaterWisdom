@@ -17,6 +17,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
+import { Bell, BellOff } from "lucide-react";
 
 const formSchema = z.object({
   phoneNumber: z.string().min(10, "Phone number must be at least 10 digits"),
@@ -85,9 +86,9 @@ export default function SettingsPage() {
     <div className="container max-w-2xl py-10">
       <div className="space-y-6">
         <div>
-          <h3 className="text-lg font-medium">SMS Notifications</h3>
+          <h3 className="text-lg font-medium">Quiz SMS Notifications</h3>
           <p className="text-sm text-gray-500">
-            Configure your daily quiz SMS notifications preferences.
+            Receive daily water quiz questions via SMS. Questions will be sent at 10:00 AM.
           </p>
         </div>
 
@@ -103,7 +104,7 @@ export default function SettingsPage() {
                     <Input placeholder="+1234567890" {...field} />
                   </FormControl>
                   <FormDescription>
-                    Enter your phone number to receive daily quiz notifications.
+                    Enter your phone number to receive daily quiz questions.
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -120,14 +121,21 @@ export default function SettingsPage() {
                       Enable Daily Quiz Notifications
                     </FormLabel>
                     <FormDescription>
-                      Receive a daily water quiz question via SMS.
+                      Get a daily water quiz question delivered to your phone at 10:00 AM.
                     </FormDescription>
                   </div>
                   <FormControl>
-                    <Switch
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
+                    <div className="flex items-center space-x-2">
+                      {field.value ? (
+                        <Bell className="w-4 h-4 text-green-500" />
+                      ) : (
+                        <BellOff className="w-4 h-4 text-gray-400" />
+                      )}
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </div>
                   </FormControl>
                 </FormItem>
               )}

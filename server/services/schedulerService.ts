@@ -8,7 +8,7 @@ export function startDailyQuizScheduler() {
   // Schedule job to run every day at 10:00 AM
   schedule.scheduleJob('0 10 * * *', async () => {
     try {
-      // Get all users with phone numbers
+      // Get all users with phone numbers and SMS notifications enabled
       const usersWithPhone = await db
         .select()
         .from(users)
@@ -34,8 +34,9 @@ export function startDailyQuizScheduler() {
 
       // Format the quiz message
       const message = await formatQuizMessage({
-        text: randomQuestion.text,
+        question: randomQuestion.question,
         options: randomQuestion.options as string[],
+        type: randomQuestion.type
       });
 
       // Send SMS to each subscribed user
@@ -49,6 +50,15 @@ export function startDailyQuizScheduler() {
 
       await Promise.all(smsPromises);
       console.log(`Daily quiz sent to ${usersWithPhone.length} users`);
+
+      // Update last notification sent timestamp for users
+      await db
+        .update(users)
+        .set({
+          lastNotificationSent: new Date(),
+        })
+        .where(eq(users.smsNotificationsEnabled, true));
+
     } catch (error) {
       console.error('Error in daily quiz scheduler:', error);
     }
