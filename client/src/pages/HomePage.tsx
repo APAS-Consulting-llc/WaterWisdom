@@ -2,7 +2,7 @@ import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Link } from 'wouter';
 import { useUser } from '@/hooks/use-user';
-import { Droplets } from 'lucide-react';
+import { Droplets, Palette } from 'lucide-react';
 import DelphiProfile from '@/components/profile/DelphiProfile';
 import MicroLearning from '@/components/learning/MicroLearning';
 
@@ -30,6 +30,12 @@ export default function HomePage() {
           <div className="grid gap-4 max-w-lg mx-auto">
             <Button asChild className="w-full" size="lg">
               <Link href="/quiz">Start Quiz</Link>
+            </Button>
+            <Button asChild variant="outline" className="w-full" size="lg">
+              <Link href="/theme">
+                <Palette className="w-4 h-4 mr-2" />
+                Customize Theme
+              </Link>
             </Button>
             {user && (
               <Button asChild variant="outline" className="w-full" size="lg">

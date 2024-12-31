@@ -11,6 +11,7 @@ import LearningPathsPage from './pages/LearningPathsPage';
 import ForumPage from './pages/ForumPage';
 import ChatBoard from './pages/ChatBoard';
 import KnowledgeBasePage from './pages/KnowledgeBasePage';
+import ThemePage from './pages/ThemePage'; // New import
 import { Navigation } from './components/layout/Navigation';
 import { Loader2 } from 'lucide-react';
 import './styles/animations.css';
@@ -39,6 +40,7 @@ function App() {
           <Route path="/quiz" component={QuizPage} />
           <Route path="/profile" component={ProfilePage} />
           <Route path="/settings" component={SettingsPage} />
+          <Route path="/theme" component={ThemePage} /> {/* New route */}
           <Route path="/submit-question" component={SubmitQuestionPage} />
           <Route path="/learning-paths" component={LearningPathsPage} />
           <Route path="/forum" component={ForumPage} />
