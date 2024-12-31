@@ -30,13 +30,16 @@ const crypto = {
 
 declare global {
   namespace Express {
-    // Extend express User type with our schema
     interface User extends Omit<User, keyof User> {
       id: number;
       username: string;
       role: 'user' | 'admin';
       points: number;
       streak: number;
+      phoneNumber?: string;
+      smsNotificationsEnabled: boolean;
+      preferredQuizTime: string;
+      timezone: string;
     }
   }
 }
@@ -139,6 +142,9 @@ export function setupAuth(app: Express) {
           username,
           password: hashedPassword,
           role: 'user',
+          preferredQuizTime: '10:00',
+          timezone: 'UTC',
+          smsNotificationsEnabled: false, //added default value
         })
         .returning();
 
