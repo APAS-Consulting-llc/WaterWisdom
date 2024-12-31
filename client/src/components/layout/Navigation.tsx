@@ -23,39 +23,37 @@ export function Navigation() {
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         <div className="flex items-center space-x-6">
           <Link href="/">
-            <span className="flex items-center text-xl font-bold text-blue-500">
+            <a className="flex items-center text-xl font-bold text-blue-500">
               <Droplet className="w-6 h-6 mr-2" />
               WaterWisdom
-            </span>
+            </a>
           </Link>
 
           <div className="flex space-x-4">
             {navItems.map(({ path, label, icon: Icon }) => (
               <Link key={path} href={path}>
-                <span 
-                  className={`
-                    flex items-center gap-1.5
-                    ${location === path ? 'text-blue-500' : 'text-gray-600'} 
-                    hover:text-blue-500 cursor-pointer transition-colors
-                  `}
-                >
+                <a className={`
+                  flex items-center gap-1.5
+                  ${location === path ? 'text-blue-500' : 'text-gray-600'} 
+                  hover:text-blue-500 cursor-pointer transition-colors
+                `}>
                   <Icon className="w-4 h-4" />
                   {label}
-                </span>
+                </a>
               </Link>
             ))}
             {user.role === 'admin' && (
               <Link href="/admin">
-                <span className={`${location === '/admin' ? 'text-blue-500' : 'text-gray-600'} hover:text-blue-500 cursor-pointer`}>
+                <a className={`${location === '/admin' ? 'text-blue-500' : 'text-gray-600'} hover:text-blue-500 cursor-pointer`}>
                   Admin
-                </span>
+                </a>
               </Link>
             )}
           </div>
         </div>
 
         <DropdownMenu>
-          <DropdownMenuTrigger asChild>
+          <DropdownMenuTrigger>
             <Button variant="ghost" className="relative">
               <User className="h-5 w-5" />
               <span className="ml-2">{user.username}</span>
@@ -63,18 +61,22 @@ export function Navigation() {
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <Link href="/profile">
-              <DropdownMenuItem className="cursor-pointer">
-                <User className="mr-2 h-4 w-4" />
-                Profile
-              </DropdownMenuItem>
+              <a className="w-full">
+                <DropdownMenuItem className="cursor-pointer">
+                  <User className="mr-2 h-4 w-4" />
+                  Profile
+                </DropdownMenuItem>
+              </a>
             </Link>
             <Link href="/settings">
-              <DropdownMenuItem className="cursor-pointer">
-                <Settings className="mr-2 h-4 w-4" />
-                Settings
-              </DropdownMenuItem>
+              <a className="w-full">
+                <DropdownMenuItem className="cursor-pointer">
+                  <Settings className="mr-2 h-4 w-4" />
+                  Settings
+                </DropdownMenuItem>
+              </a>
             </Link>
-            <DropdownMenuItem className="cursor-pointer" onClick={() => logout()}>
+            <DropdownMenuItem onSelect={() => logout()} className="cursor-pointer">
               <LogOut className="mr-2 h-4 w-4" />
               Logout
             </DropdownMenuItem>
