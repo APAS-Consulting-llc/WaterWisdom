@@ -22,7 +22,7 @@ const queryClient = new QueryClient({
 
         return response.json();
       },
-      staleTime: 60 * 1000, // 1 minute
+      staleTime: Infinity,
       refetchOnWindowFocus: false,
       retry: false,
     },

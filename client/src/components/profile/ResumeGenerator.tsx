@@ -5,7 +5,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useQuery } from '@tanstack/react-query';
 import { PDFDownloadLink, Document, Page, Text, View, StyleSheet, PDFViewer } from '@react-pdf/renderer';
 import { useUser } from '@/hooks/use-user';
-import { FileDown, Eye } from 'lucide-react';
+import { FileDown, Eye, Loader2 } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 const styles = StyleSheet.create({
   page: {
@@ -73,12 +74,14 @@ type ResumeData = {
 const ResumeDocument = ({ data, layout }: { data: ResumeData; layout: keyof typeof layouts }) => {
   const { user } = useUser();
 
+  if (!user) return null;
+
   return (
     <Document>
       <Page size="A4" style={styles.page}>
         <View style={layout === 'modern' ? styles.modernLayout : styles.traditionalLayout}>
           <View style={styles.header}>
-            <Text style={styles.title}>{user?.username}</Text>
+            <Text style={styles.title}>{user.username}</Text>
             <Text style={styles.subtitle}>Water Industry Professional</Text>
           </View>
 
@@ -136,21 +139,27 @@ const ResumeDocument = ({ data, layout }: { data: ResumeData; layout: keyof type
 export default function ResumeGenerator() {
   const [selectedLayout, setSelectedLayout] = useState<keyof typeof layouts>('modern');
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const { toast } = useToast();
+  const { user } = useUser();
 
-  const { data: credentials = [] } = useQuery({
+  const { data: credentials = [], isLoading: isLoadingCredentials } = useQuery({
     queryKey: ['/api/user/credentials'],
+    enabled: !!user,
   });
 
-  const { data: publications = [] } = useQuery({
+  const { data: publications = [], isLoading: isLoadingPublications } = useQuery({
     queryKey: ['/api/user/publications'],
+    enabled: !!user,
   });
 
-  const { data: achievements = [] } = useQuery({
+  const { data: achievements = [], isLoading: isLoadingAchievements } = useQuery({
     queryKey: ['/api/achievements'],
+    enabled: !!user,
   });
 
-  const { data: skills = [] } = useQuery({
+  const { data: skills = [], isLoading: isLoadingSkills } = useQuery({
     queryKey: ['/api/skills'],
+    enabled: !!user,
     initialData: [
       { subject: 'Water Treatment', level: 85 },
       { subject: 'Quality Control', level: 75 },
@@ -160,12 +169,26 @@ export default function ResumeGenerator() {
     ],
   });
 
+  const isLoading = isLoadingCredentials || isLoadingPublications || isLoadingAchievements || isLoadingSkills;
+
   const resumeData = {
     credentials,
     publications,
     achievements,
     skills,
   };
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>
