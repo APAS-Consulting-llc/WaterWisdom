@@ -34,6 +34,12 @@ function App() {
     return <AuthPage />;
   }
 
+  // If user tries to access admin route without admin role, redirect them to home
+  if (window.location.pathname === '/admin' && user.role !== 'admin') {
+    window.location.href = '/';
+    return null;
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Navigation />
