@@ -10,6 +10,7 @@ import { startDailyQuizScheduler } from './services/schedulerService';
 import { generateMicroLearning } from './services/microLearningService';
 
 export function registerRoutes(app: Express): Server {
+  // sets up /api/register, /api/login, /api/logout, /api/user
   setupAuth(app);
 
   // Create HTTP server
