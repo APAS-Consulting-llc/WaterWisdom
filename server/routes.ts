@@ -5,6 +5,7 @@ import { db } from "@db";
 import { users } from "@db/schema";
 import { eq } from "drizzle-orm";
 import CollaborationService from "./services/collaborationService";
+import { handleChatMessage } from './services/chatService';
 
 export function registerRoutes(app: Express): Server {
   setupAuth(app);
@@ -14,6 +15,22 @@ export function registerRoutes(app: Express): Server {
 
   // Initialize WebSocket collaboration service
   new CollaborationService(httpServer);
+
+  // AI content generation endpoint
+  app.post("/api/ai/generate-content", async (req, res) => {
+    if (!req.user) {
+      return res.status(401).send("Not authenticated");
+    }
+
+    try {
+      const { prompt } = req.body;
+      const enhancedContent = await handleChatMessage(prompt);
+      res.json({ content: enhancedContent });
+    } catch (error) {
+      console.error("AI content generation error:", error);
+      res.status(500).send("Failed to generate content");
+    }
+  });
 
   // Add user preferences endpoint
   app.post("/api/user/preferences", async (req, res) => {
@@ -834,5 +851,4 @@ type DifficultyLevel = 'beginner' | 'intermediate' | 'expert';
 import { questions, userProgress, achievements, learningPaths, userLearningPaths, forumPosts, forumComments, forumReactions, badges, userBadges, badgeCategories, knowledgeEntries, knowledgeVotes, knowledgeRevisions } from "@db/schema";
 import { and, count, avg, desc } from "drizzle-orm";
 import { startDailyQuizScheduler } from './services/schedulerService';
-import { handleChatMessage } from './services/chatService';
 import { generateMicroLearning } from './services/microLearningService';
