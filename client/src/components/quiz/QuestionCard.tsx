@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { ShareButtons } from '@/components/ui/ShareButtons';
 import type { Question } from '@db/schema';
-import { AlertCircle, CheckCircle2, BookOpen, Share2 } from 'lucide-react';
+import { AlertCircle, CheckCircle2, BookOpen } from 'lucide-react';
 
 interface QuestionCardProps {
   question: Question;
@@ -17,7 +17,6 @@ interface QuestionCardProps {
 export function QuestionCard({ question, onSubmit }: QuestionCardProps) {
   const [answer, setAnswer] = useState('');
   const [isAnswered, setIsAnswered] = useState(false);
-  const [showShare, setShowShare] = useState(false);
   const { toast } = useToast();
 
   const shareUrl = typeof window !== 'undefined' ? window.location.href : '';
@@ -44,26 +43,16 @@ export function QuestionCard({ question, onSubmit }: QuestionCardProps) {
             <span className="mx-2">•</span>
             <span className="text-sm uppercase">{question.difficulty}</span>
           </div>
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            className="text-white hover:text-white/80"
-            onClick={() => setShowShare(!showShare)}
-          >
-            <Share2 className="h-4 w-4 mr-2" />
-            Share
-          </Button>
         </div>
-        <h2 className="text-xl font-semibold">{question.question}</h2>
-        {showShare && (
-          <div className="mt-4 p-4 bg-white/10 rounded-lg">
-            <ShareButtons 
-              url={shareUrl}
-              title={`Can you answer this water knowledge question: ${question.question}`}
-              description={`Test your water sector knowledge with this question about ${question.category}!`}
-            />
-          </div>
-        )}
+        <h2 className="text-xl font-semibold mb-4">{question.question}</h2>
+        <div className="bg-white/10 rounded-lg p-4">
+          <h3 className="text-sm font-medium text-white mb-2">Share this question:</h3>
+          <ShareButtons 
+            url={shareUrl}
+            title={`🌊 Water Knowledge Quiz: ${question.question}`}
+            description={`Test your knowledge in ${question.category}! Join me in learning about water sector topics at Water.AI`}
+          />
+        </div>
       </CardHeader>
 
       <CardContent className="pt-6">

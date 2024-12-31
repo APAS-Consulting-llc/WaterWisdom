@@ -15,17 +15,22 @@ interface ShareButtonsProps {
 
 export function ShareButtons({ url, title, description }: ShareButtonsProps) {
   return (
-    <div className="flex gap-2 items-center">
-      <FacebookShareButton url={url} quote={title}>
-        <FacebookIcon size={32} round />
+    <div className="flex gap-3 items-center justify-center py-2">
+      <FacebookShareButton url={url} title={title}>
+        <FacebookIcon size={40} round />
       </FacebookShareButton>
 
-      <LinkedinShareButton url={url} title={title} summary={description}>
-        <LinkedinIcon size={32} round />
+      <LinkedinShareButton 
+        url={url} 
+        title={title} 
+        summary={description}
+        source="Water.AI"
+      >
+        <LinkedinIcon size={40} round />
       </LinkedinShareButton>
 
       <TwitterShareButton url={url} title={title}>
-        <TwitterIcon size={32} round />
+        <TwitterIcon size={40} round />
       </TwitterShareButton>
     </div>
   );
