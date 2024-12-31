@@ -5,6 +5,7 @@ import { db } from "@db";
 import { questions, userProgress, achievements, users, learningPaths, userLearningPaths, forumPosts, forumComments, forumReactions } from "@db/schema";
 import { eq, and, count, avg, desc } from "drizzle-orm";
 import { startDailyQuizScheduler } from './services/schedulerService';
+import { handleChatMessage } from './services/chatService';
 
 type DifficultyLevel = 'beginner' | 'intermediate' | 'expert';
 
@@ -35,6 +36,26 @@ export function registerRoutes(app: Express): Server {
 
   // Start the daily quiz scheduler
   startDailyQuizScheduler();
+
+  // Add chat endpoint
+  app.post("/api/chat", async (req, res) => {
+    if (!req.user) {
+      return res.status(401).send("Not authenticated");
+    }
+
+    const { message } = req.body;
+    if (!message || typeof message !== 'string') {
+      return res.status(400).send("Invalid message");
+    }
+
+    try {
+      const response = await handleChatMessage(message);
+      res.json({ response });
+    } catch (error) {
+      console.error('Chat endpoint error:', error);
+      res.status(500).send("Failed to process chat message");
+    }
+  });
 
   // SMS Preferences Management
   app.post("/api/user/sms-preferences", async (req, res) => {
