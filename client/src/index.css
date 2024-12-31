@@ -31,6 +31,19 @@
   .scale-heading {
     @apply font-display tracking-tight;
   }
+
+  /* Social share buttons styling */
+  .share-button {
+    @apply hover:scale-105 transition-transform duration-200 rounded-full shadow-scale hover:shadow-scale-hover;
+  }
+
+  .share-button svg {
+    @apply hover:-translate-y-0.5 transition-transform duration-200;
+  }
+
+  .share-button:hover {
+    filter: brightness(1.1);
+  }
 }
 
 /* Add modern hover effects */

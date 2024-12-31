@@ -3,8 +3,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AchievementBadge } from '@/components/quiz/AchievementBadge';
 import { Progress } from '@/components/ui/progress';
 import { SkillRadar, type Skill } from '@/components/profile/SkillRadar';
+import { ShareButtons } from '@/components/ui/ShareButtons';
 import { useUser } from '@/hooks/use-user';
-import { Loader2, Trophy, Target, Award, Brain } from 'lucide-react';
+import { Loader2, Trophy, Target, Award, Brain, Share2 } from 'lucide-react';
 import { ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
 // Sample skills data - in a real app, this would come from the API
@@ -57,8 +58,21 @@ export default function ProfilePage() {
 
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
 
+  const shareUrl = typeof window !== 'undefined' ? window.location.href : '';
+  const shareTitle = `Check out my Water.AI profile! ${accuracy.toFixed(1)}% accuracy across ${totalQuestions} questions 💧`;
+  const shareDescription = `I'm mastering water sector skills on Water.AI! Join me in making a difference in water management and sustainability.`;
+
   return (
     <div className="max-w-6xl mx-auto py-8 px-4">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold scale-heading">Professional Profile</h1>
+        <ShareButtons 
+          url={shareUrl}
+          title={shareTitle}
+          description={shareDescription}
+        />
+      </div>
+
       <div className="grid gap-8 md:grid-cols-2">
         <div className="space-y-6">
           <Card>
@@ -146,8 +160,15 @@ export default function ProfilePage() {
           </Card>
 
           <Card>
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>Achievements</CardTitle>
+              {achievements?.length > 0 && (
+                <ShareButtons 
+                  url={shareUrl}
+                  title={`I've earned ${achievements.length} achievements on Water.AI! 🏆`}
+                  description="Join me in learning about water management and earning professional achievements!"
+                />
+              )}
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
