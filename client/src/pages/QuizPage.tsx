@@ -2,15 +2,15 @@ import { useState } from 'react';
 import { useQuiz } from '@/hooks/use-quiz';
 import { QuestionCard } from '@/components/quiz/QuestionCard';
 import { ProgressBar } from '@/components/quiz/ProgressBar';
+import { QuizSetup } from '@/components/quiz/QuizSetup';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
 import type { Question, DifficultyLevel } from '@db/schema';
 
 export default function QuizPage() {
-  const [category, setCategory] = useState<string>('all');
-  const [difficulty, setDifficulty] = useState<DifficultyLevel | 'all'>('all');
+  const [quizStarted, setQuizStarted] = useState(false);
+  const [maxQuestions, setMaxQuestions] = useState(3);
   const { questions, isLoading, submitAnswer } = useQuiz();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [streak, setStreak] = useState(0);
@@ -34,13 +34,33 @@ export default function QuizPage() {
     );
   }
 
-  const filteredQuestions = questions.filter(q => {
-    if (category !== 'all' && q.category !== category) return false;
-    if (difficulty !== 'all' && q.difficulty !== difficulty) return false;
-    return true;
-  });
+  // Randomly select maxQuestions number of questions
+  const selectedQuestions = !quizStarted ? [] : questions
+    .sort(() => Math.random() - 0.5)
+    .slice(0, maxQuestions);
 
-  const currentQuestion: Question = filteredQuestions[currentIndex];
+  const currentQuestion: Question | undefined = selectedQuestions[currentIndex];
+
+  const handleStartQuiz = (numQuestions: number) => {
+    setMaxQuestions(numQuestions);
+    setQuizStarted(true);
+    setCurrentIndex(0);
+    setScore(0);
+    setStreak(0);
+  };
+
+  const handleNextQuestion = () => {
+    if (currentIndex < maxQuestions - 1) {
+      setCurrentIndex(prev => prev + 1);
+    } else {
+      toast({
+        title: 'Quiz Complete! 🎉',
+        description: `Final Score: ${score} points`,
+        variant: 'default'
+      });
+      setQuizStarted(false);
+    }
+  };
 
   const calculatePoints = (difficulty: string, streakCount: number) => {
     const basePoints = {
@@ -49,11 +69,13 @@ export default function QuizPage() {
       'expert': 30
     }[difficulty] || 10;
 
-    const streakBonus = Math.floor(streakCount / 5) * 5; // Bonus points for every 5 correct answers
+    const streakBonus = Math.floor(streakCount / 5) * 5;
     return basePoints + streakBonus;
   };
 
   const handleSubmit = async (answer: string) => {
+    if (!currentQuestion) return;
+
     try {
       const result = await submitAnswer({
         questionId: currentQuestion.id,
@@ -66,14 +88,14 @@ export default function QuizPage() {
         setStreak(prev => prev + 1);
         toast({
           title: `Correct! +${points} points`,
-          description: `Streak: ${streak + 1} 🔥`,
+          description: `Keep going! You're on a ${streak + 1} question streak! 🔥`,
           variant: 'default'
         });
       } else {
         setStreak(0);
         toast({
           title: 'Incorrect',
-          description: `The correct answer was: ${currentQuestion.correctAnswer}`,
+          description: 'Keep learning! Review the explanation below.',
           variant: 'destructive'
         });
       }
@@ -86,58 +108,36 @@ export default function QuizPage() {
     }
   };
 
-  const categories = Array.from(new Set(questions.map(q => q.category)));
+  if (!quizStarted) {
+    return <QuizSetup onStart={handleStartQuiz} />;
+  }
 
   return (
     <div className="max-w-4xl mx-auto py-8">
-      <Card className="mb-8">
-        <CardHeader>
-          <CardTitle>Quiz Settings</CardTitle>
-        </CardHeader>
-        <CardContent className="flex gap-4">
-          <Select value={category} onValueChange={setCategory}>
-            <SelectTrigger className="w-[200px]">
-              <SelectValue placeholder="Select category" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Categories</SelectItem>
-              {categories.map(cat => (
-                <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <Select value={difficulty} onValueChange={(val) => setDifficulty(val as DifficultyLevel | 'all')}>
-            <SelectTrigger className="w-[200px]">
-              <SelectValue placeholder="Select difficulty" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Difficulties</SelectItem>
-              <SelectItem value="beginner">Beginner</SelectItem>
-              <SelectItem value="intermediate">Intermediate</SelectItem>
-              <SelectItem value="expert">Expert</SelectItem>
-            </SelectContent>
-          </Select>
-        </CardContent>
-      </Card>
-
       <div className="text-right mb-4">
         <span className="text-2xl font-bold text-blue-500">Score: {score}</span>
       </div>
 
       <ProgressBar
         current={currentIndex + 1}
-        total={filteredQuestions.length}
+        total={maxQuestions}
         streak={streak}
       />
 
       <div className="relative">
         <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-cyan-500/10 rounded-lg -z-10" />
         {currentQuestion && (
-          <QuestionCard
-            question={currentQuestion}
-            onSubmit={handleSubmit}
-          />
+          <>
+            <QuestionCard
+              question={currentQuestion}
+              onSubmit={handleSubmit}
+            />
+            <div className="mt-4 flex justify-end">
+              <Button onClick={handleNextQuestion}>
+                {currentIndex < maxQuestions - 1 ? 'Next Question' : 'Finish Quiz'}
+              </Button>
+            </div>
+          </>
         )}
       </div>
     </div>

@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import type { Question } from '@db/schema';
-import { AlertCircle, CheckCircle2 } from 'lucide-react';
+import { AlertCircle, CheckCircle2, BookOpen } from 'lucide-react';
 
 interface QuestionCardProps {
   question: Question;
@@ -90,12 +90,13 @@ export function QuestionCard({ question, onSubmit }: QuestionCardProps) {
                 <p className="text-sm mt-1">
                   The correct answer is: <span className="font-medium">{question.correctAnswer}</span>
                 </p>
-                {question.explanation && (
-                  <div className="mt-3 text-sm text-gray-700">
-                    <h4 className="font-medium text-gray-900">Learn More:</h4>
-                    <p className="mt-1">{question.explanation}</p>
+                <div className="mt-4 p-4 bg-blue-50 rounded-lg">
+                  <div className="flex items-center gap-2 mb-2">
+                    <BookOpen className="h-5 w-5 text-blue-500" />
+                    <h4 className="font-medium text-blue-900">Learn More:</h4>
                   </div>
-                )}
+                  <p className="text-sm text-blue-800">{question.explanation}</p>
+                </div>
               </div>
             </div>
           </div>
