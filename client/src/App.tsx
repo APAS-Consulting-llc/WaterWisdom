@@ -33,7 +33,7 @@ function App() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Navigation />
-      <main className="container mx-auto px-4 py-8">
+      <main className="pt-16">
         <Switch>
           <Route path="/" component={HomePage} />
           <Route path="/quiz" component={QuizPage} />
@@ -50,7 +50,7 @@ function App() {
           )}
           <Route>
             {() => (
-              <div className="text-center">
+              <div className="text-center py-12">
                 <h1 className="text-2xl font-bold text-gray-900">404 - Page Not Found</h1>
                 <p className="mt-2 text-gray-600">The page you're looking for doesn't exist.</p>
               </div>

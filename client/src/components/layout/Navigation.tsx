@@ -18,39 +18,36 @@ export function Navigation() {
     { path: '/chat', label: 'AI Assistant', icon: Bot },
   ];
 
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
+  };
+
   return (
     <nav className="w-full bg-white border-b px-4 py-2">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         <div className="flex items-center space-x-6">
           <Link href="/">
-            <Button variant="ghost" className="flex items-center text-xl font-bold text-blue-500 hover:bg-transparent">
+            <a className="flex items-center text-xl font-bold text-blue-500 hover:text-blue-600">
               <Droplet className="w-6 h-6 mr-2" />
               WaterWisdom
-            </Button>
+            </a>
           </Link>
 
           <div className="flex space-x-4">
             {navItems.map(({ path, label, icon: Icon }) => (
               <Link key={path} href={path}>
-                <Button 
-                  variant="ghost" 
-                  className={`flex items-center gap-1.5 ${location === path ? 'text-blue-500' : 'text-gray-600'} hover:text-blue-500`}
-                >
+                <a className={`flex items-center gap-1.5 px-3 py-2 rounded-md transition-colors ${
+                  location === path ? 'text-blue-500 bg-blue-50' : 'text-gray-600 hover:text-blue-500 hover:bg-gray-50'
+                }`}>
                   <Icon className="w-4 h-4" />
                   {label}
-                </Button>
+                </a>
               </Link>
             ))}
-            {user.role === 'admin' && (
-              <Link href="/admin">
-                <Button 
-                  variant="ghost" 
-                  className={`${location === '/admin' ? 'text-blue-500' : 'text-gray-600'} hover:text-blue-500`}
-                >
-                  Admin
-                </Button>
-              </Link>
-            )}
           </div>
         </div>
 
@@ -62,23 +59,23 @@ export function Navigation() {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuItem>
-              <Link href="/profile">
+            <Link href="/profile">
+              <DropdownMenuItem className="cursor-pointer">
                 <div className="flex w-full items-center">
                   <User className="mr-2 h-4 w-4" />
                   Profile
                 </div>
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem>
-              <Link href="/settings">
+              </DropdownMenuItem>
+            </Link>
+            <Link href="/settings">
+              <DropdownMenuItem className="cursor-pointer">
                 <div className="flex w-full items-center">
                   <Settings className="mr-2 h-4 w-4" />
                   Settings
                 </div>
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => logout()}>
+              </DropdownMenuItem>
+            </Link>
+            <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
               <div className="flex w-full items-center">
                 <LogOut className="mr-2 h-4 w-4" />
                 Logout
