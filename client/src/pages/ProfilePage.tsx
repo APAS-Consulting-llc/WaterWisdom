@@ -2,9 +2,19 @@ import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AchievementBadge } from '@/components/quiz/AchievementBadge';
 import { Progress } from '@/components/ui/progress';
+import { SkillRadar, type Skill } from '@/components/profile/SkillRadar';
 import { useUser } from '@/hooks/use-user';
 import { Loader2, Trophy, Target, Award, Brain } from 'lucide-react';
 import { ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+
+// Sample skills data - in a real app, this would come from the API
+const skillsData: Skill[] = [
+  { subject: 'Water Treatment', level: 85, fullMark: 100 },
+  { subject: 'Quality Control', level: 75, fullMark: 100 },
+  { subject: 'Sustainability', level: 90, fullMark: 100 },
+  { subject: 'Regulations', level: 70, fullMark: 100 },
+  { subject: 'Innovation', level: 80, fullMark: 100 },
+];
 
 export default function ProfilePage() {
   const { user } = useUser();
@@ -90,13 +100,19 @@ export default function ProfilePage() {
                     <Progress 
                       value={(stats.correct / stats.total) * 100} 
                       className="h-2"
-                      indicatorClassName={`bg-${COLORS[index % COLORS.length]}`}
+                      style={{ 
+                        '--progress-background': COLORS[index % COLORS.length] 
+                      } as any}
                     />
                   </div>
                 ))}
               </div>
             </CardContent>
           </Card>
+          <SkillRadar 
+            skills={skillsData}
+            className="bg-white rounded-lg shadow-scale"
+          />
         </div>
 
         <div className="space-y-6">
