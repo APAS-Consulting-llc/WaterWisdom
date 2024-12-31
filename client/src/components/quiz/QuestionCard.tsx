@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import type { Question } from '@db/schema';
+import { AlertCircle, CheckCircle2 } from 'lucide-react';
 
 interface QuestionCardProps {
   question: Question;
@@ -14,6 +15,7 @@ interface QuestionCardProps {
 
 export function QuestionCard({ question, onSubmit }: QuestionCardProps) {
   const [answer, setAnswer] = useState('');
+  const [isAnswered, setIsAnswered] = useState(false);
   const { toast } = useToast();
 
   const handleSubmit = () => {
@@ -25,6 +27,7 @@ export function QuestionCard({ question, onSubmit }: QuestionCardProps) {
       });
       return;
     }
+    setIsAnswered(true);
     onSubmit(answer);
   };
 
@@ -37,10 +40,10 @@ export function QuestionCard({ question, onSubmit }: QuestionCardProps) {
         </div>
         <h2 className="text-xl font-semibold mt-2">{question.question}</h2>
       </CardHeader>
-      
+
       <CardContent className="pt-6">
         {question.type === 'multiple_choice' && question.options && (
-          <RadioGroup onValueChange={setAnswer} value={answer}>
+          <RadioGroup onValueChange={setAnswer} value={answer} disabled={isAnswered}>
             {(question.options as string[]).map((option, index) => (
               <div key={index} className="flex items-center space-x-2 p-2">
                 <RadioGroupItem id={`option-${index}`} value={option} />
@@ -49,9 +52,9 @@ export function QuestionCard({ question, onSubmit }: QuestionCardProps) {
             ))}
           </RadioGroup>
         )}
-        
+
         {question.type === 'true_false' && (
-          <RadioGroup onValueChange={setAnswer} value={answer}>
+          <RadioGroup onValueChange={setAnswer} value={answer} disabled={isAnswered}>
             <div className="flex items-center space-x-2 p-2">
               <RadioGroupItem id="true" value="true" />
               <Label htmlFor="true">True</Label>
@@ -62,20 +65,48 @@ export function QuestionCard({ question, onSubmit }: QuestionCardProps) {
             </div>
           </RadioGroup>
         )}
-        
+
         {question.type === 'short_answer' && (
           <Input
             placeholder="Enter your answer"
             value={answer}
             onChange={(e) => setAnswer(e.target.value)}
+            disabled={isAnswered}
           />
         )}
+
+        {isAnswered && (
+          <div className={`mt-6 p-4 rounded-lg ${answer.toLowerCase() === question.correctAnswer.toLowerCase() ? 'bg-green-50' : 'bg-red-50'}`}>
+            <div className="flex items-start gap-3">
+              {answer.toLowerCase() === question.correctAnswer.toLowerCase() ? (
+                <CheckCircle2 className="h-5 w-5 text-green-500 mt-0.5" />
+              ) : (
+                <AlertCircle className="h-5 w-5 text-red-500 mt-0.5" />
+              )}
+              <div>
+                <h3 className={`font-semibold ${answer.toLowerCase() === question.correctAnswer.toLowerCase() ? 'text-green-700' : 'text-red-700'}`}>
+                  {answer.toLowerCase() === question.correctAnswer.toLowerCase() ? 'Correct Answer!' : 'Incorrect Answer'}
+                </h3>
+                <p className="text-sm mt-1">
+                  The correct answer is: <span className="font-medium">{question.correctAnswer}</span>
+                </p>
+                {question.explanation && (
+                  <div className="mt-3 text-sm text-gray-700">
+                    <h4 className="font-medium text-gray-900">Learn More:</h4>
+                    <p className="mt-1">{question.explanation}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </CardContent>
-      
+
       <CardFooter>
         <Button 
           className="w-full ripple-button"
           onClick={handleSubmit}
+          disabled={isAnswered}
         >
           Submit Answer
         </Button>

@@ -21,6 +21,7 @@ export const questions = pgTable("questions", {
   question: text("question").notNull(),
   options: jsonb("options"),
   correctAnswer: text("correct_answer").notNull(),
+  explanation: text("explanation").notNull().default(''),
   createdBy: integer("created_by").references(() => users.id),
   approved: boolean("approved").notNull().default(false),
   createdAt: timestamp("created_at").defaultNow(),
@@ -57,13 +58,11 @@ export const questionRelations = relations(questions, ({ one, many }) => ({
   progress: many(userProgress),
 }));
 
-// Type definitions with proper enums
 export type QuestionType = 'multiple_choice' | 'true_false' | 'short_answer';
 export type DifficultyLevel = 'beginner' | 'intermediate' | 'expert';
 export type UserRole = 'user' | 'admin';
 export type AchievementType = 'streak' | 'points' | 'category_mastery';
 
-// Base types from database schema
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 export type Question = typeof questions.$inferSelect;
@@ -71,7 +70,6 @@ export type NewQuestion = typeof questions.$inferInsert;
 export type UserProgress = typeof userProgress.$inferSelect;
 export type Achievement = typeof achievements.$inferSelect;
 
-// Zod schemas for validation
 export const insertUserSchema = createInsertSchema(users);
 export const selectUserSchema = createSelectSchema(users);
 export const insertQuestionSchema = createInsertSchema(questions, {
