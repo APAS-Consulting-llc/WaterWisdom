@@ -67,9 +67,9 @@ export default function HomePage() {
       >
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-8">
-            <h2 className="text-2xl font-semibold mb-2">Choose Your Expert Guide</h2>
+            <h2 className="text-2xl font-semibold mb-2">Engage with a Digital Clone</h2>
             <p className="text-gray-600">
-              Select an AI avatar to guide your learning journey
+              Connect with AI-powered experts who understand your water sector journey
             </p>
           </div>
           <AvatarScroll />

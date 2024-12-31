@@ -15,31 +15,31 @@ interface Expert {
 const experts: Expert[] = [
   {
     id: 1,
-    name: "Dr. Hardeep Anand",
+    name: "Hardeep Anand",
     role: "Water Sector Professional",
     image: "/hardeep.jpg"
   },
   {
     id: 2,
-    name: "Dr. Sarah Chen",
+    name: "Sarah Chen",
     role: "Environmental Engineer",
     image: "/sarah.jpg"
   },
   {
     id: 3,
-    name: "Prof. James Waters",
+    name: "James Waters",
     role: "Water Policy Expert",
     image: "/james.jpg"
   },
   {
     id: 4,
-    name: "Dr. Maria Rodriguez",
+    name: "Maria Rodriguez",
     role: "Conservation Specialist",
     image: "/maria.jpg"
   },
   {
     id: 5,
-    name: "Dr. Ahmed Hassan",
+    name: "Ahmed Hassan",
     role: "Water Technology Innovation",
     image: "/ahmed.jpg"
   }
@@ -52,7 +52,7 @@ export function AvatarScroll() {
   const scroll = (direction: 'left' | 'right') => {
     const container = scrollContainerRef.current;
     if (!container) return;
-    
+
     const scrollAmount = 200;
     const targetScroll = container.scrollLeft + (direction === 'left' ? -scrollAmount : scrollAmount);
     container.scrollTo({
@@ -88,7 +88,7 @@ export function AvatarScroll() {
             </motion.div>
           ))}
         </div>
-        
+
         <Button
           variant="ghost"
           size="icon"
@@ -97,7 +97,7 @@ export function AvatarScroll() {
         >
           <ChevronLeft className="h-6 w-6" />
         </Button>
-        
+
         <Button
           variant="ghost"
           size="icon"
@@ -107,7 +107,7 @@ export function AvatarScroll() {
           <ChevronRight className="h-6 w-6" />
         </Button>
       </div>
-      
+
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
