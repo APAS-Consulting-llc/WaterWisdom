@@ -7,6 +7,9 @@ import { useQuery } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { ShareButtons } from '@/components/ui/ShareButtons';
 import { motion, AnimatePresence } from 'framer-motion';
+import { WaterTooltip } from '@/components/ui/water-tooltip';
+import { waterTerminology } from '@/lib/water-terminology';
+import ReactDOM from 'react-dom';
 
 interface MicroLearningContent {
   title: string;
@@ -104,15 +107,35 @@ export default function MicroLearning() {
     );
   }
 
+  // Helper function to wrap technical terms with tooltips
+  const enhanceContentWithTooltips = (content: string) => {
+    let enhancedContent = content;
+    Object.entries(waterTerminology).forEach(([key, { term, definition }]) => {
+      const regex = new RegExp(`\\b${term}\\b`, 'gi');
+      enhancedContent = enhancedContent.replace(regex, `
+        <span class="tooltip-wrapper" data-term="${term}" data-definition="${definition}">
+          $&
+        </span>
+      `);
+    });
+    return enhancedContent;
+  };
+
   return (
     <Card className="bg-card">
       <CardHeader>
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-2">
             <CardTitle className="text-xl">Today's Learning</CardTitle>
-            <Badge variant="outline" className="text-xs">
-              {currentContent?.topic || 'Water Industry Insights'}
-            </Badge>
+            <WaterTooltip
+              term="Micro Learning"
+              definition="Brief, focused learning modules designed to deliver specific knowledge in short, digestible formats."
+              showIcon={true}
+            >
+              <Badge variant="outline" className="text-xs">
+                {currentContent?.topic || 'Water Industry Insights'}
+              </Badge>
+            </WaterTooltip>
           </div>
           <Button
             variant="ghost"
@@ -140,9 +163,28 @@ export default function MicroLearning() {
               className="prose prose-slate dark:prose-invert max-w-none"
             >
               <h2 className="text-xl font-semibold mb-4">{currentContent.title}</h2>
-              {currentContent.content.split('\n\n').map((section, index) => (
-                <p key={index} className="mb-4">{section}</p>
-              ))}
+              <div 
+                dangerouslySetInnerHTML={{ 
+                  __html: enhanceContentWithTooltips(currentContent.content)
+                }} 
+                ref={el => {
+                  if (el) {
+                    el.querySelectorAll('.tooltip-wrapper').forEach(wrapper => {
+                      const term = wrapper.getAttribute('data-term');
+                      const definition = wrapper.getAttribute('data-definition');
+                      if (term && definition) {
+                        const content = wrapper.innerHTML;
+                        ReactDOM.render(
+                          <WaterTooltip term={term} definition={definition}>
+                            {content}
+                          </WaterTooltip>,
+                          wrapper
+                        );
+                      }
+                    });
+                  }
+                }}
+              />
               <div className="flex items-center justify-end gap-2 mt-4 text-sm text-muted-foreground">
                 <span>By {currentContent.author}</span>
               </div>
