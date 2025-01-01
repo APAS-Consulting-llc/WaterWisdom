@@ -2,7 +2,7 @@ import { Link, useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { useUser } from '@/hooks/use-user';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { User, Settings, LogOut, Droplet, BookOpen, MessageSquare, Users, Brain, Bot, Layout } from 'lucide-react';
+import { User, Settings, LogOut, Droplet, BookOpen, MessageSquare, Users, Brain, Bot, Layout, Briefcase } from 'lucide-react';
 
 export function Navigation() {
   const { user, logout } = useUser();
@@ -12,6 +12,7 @@ export function Navigation() {
 
   const navItems = [
     { path: '/quiz', label: 'Take Quiz', icon: BookOpen },
+    { path: '/careers', label: 'Career Paths', icon: Briefcase },
     { path: '/knowledge', label: 'Expert Knowledge', icon: Brain },
     { path: '/forum', label: 'Community Forum', icon: Users },
     { path: '/learning-paths', label: 'Learning Paths', icon: MessageSquare },
@@ -37,7 +38,7 @@ export function Navigation() {
             </Link>
           </Button>
 
-          <div className="flex space-x-4">
+          <div className="hidden md:flex space-x-4">
             {navItems.map(({ path, label, icon: Icon }) => (
               <Button
                 key={path}
