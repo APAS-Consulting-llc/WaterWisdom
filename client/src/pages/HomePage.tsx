@@ -1,14 +1,12 @@
 import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Link } from 'wouter';
-import { useUser } from '@/hooks/use-user';
-import { Droplets, Building2, Sparkles, Book, Users, Brain, Briefcase, GraduationCap, Trophy } from 'lucide-react';
+import { Link, useLocation } from "wouter";
+import { Button } from "@/components/ui/button";
+import { useUser } from "@/hooks/use-user";
+import { Droplets, Building2, Sparkles, Book, Users, Brain, Bot, Layout, Briefcase, GraduationCap, Trophy } from "lucide-react";
 import DelphiProfile from '@/components/profile/DelphiProfile';
 import MicroLearning from '@/components/learning/MicroLearning';
-import { SkillRadar, type Skill } from '@/components/profile/SkillRadar';
-import { motion } from 'framer-motion';
-import { AvatarScroll } from '@/components/profile/AvatarScroll';
-import { Badge } from '@/components/ui/badge';
+import { SkillRadar } from "@/components/profile/SkillRadar";
+import { motion } from "framer-motion";
 import WaterNewsSection from '@/components/news/WaterNewsSection';
 
 // Animation variants...
@@ -53,6 +51,7 @@ const QuickActionCard = ({ icon: Icon, title, description, href }) => (
 
 export default function HomePage() {
   const { user } = useUser();
+  const [location] = useLocation();
 
   // Sample skill data - in a real app, this would come from an API
   const sampleSkills: Skill[] = [
@@ -120,24 +119,36 @@ export default function HomePage() {
             variants={itemVariants}
             className="grid md:grid-cols-3 gap-4 max-w-4xl mx-auto mt-12"
           >
-            <QuickActionCard
-              icon={Briefcase}
-              title="Explore Career Paths"
-              description="Discover your professional journey in the water sector"
-              href="/careers"
-            />
-            <QuickActionCard
-              icon={GraduationCap}
-              title="Take a Quiz"
-              description="Test your knowledge and earn certifications"
-              href="/quiz"
-            />
-            <QuickActionCard
-              icon={Trophy}
-              title="Build Portfolio"
-              description="Showcase your expertise and achievements"
-              href="/portfolio"
-            />
+            <Link href="/careers">
+              <a className="block">
+                <QuickActionCard
+                  icon={Briefcase}
+                  title="Explore Career Paths"
+                  description="Discover your professional journey in the water sector"
+                  href="/careers"
+                />
+              </a>
+            </Link>
+            <Link href="/quiz">
+              <a className="block">
+                <QuickActionCard
+                  icon={GraduationCap}
+                  title="Take a Quiz"
+                  description="Test your knowledge and earn certifications"
+                  href="/quiz"
+                />
+              </a>
+            </Link>
+            <Link href="/portfolio">
+              <a className="block">
+                <QuickActionCard
+                  icon={Trophy}
+                  title="Build Portfolio"
+                  description="Showcase your expertise and achievements"
+                  href="/portfolio"
+                />
+              </a>
+            </Link>
           </motion.div>
         )}
       </motion.section>
@@ -165,9 +176,11 @@ export default function HomePage() {
                 One Water Hub is established by One Water Academy, a nonprofit organization 
                 dedicated to advancing water sector education and collaboration.
               </p>
-              <Button asChild className="mt-6" variant="outline" size="lg">
-                <Link href="/about">Learn More</Link>
-              </Button>
+              <Link href="/about">
+                <Button className="mt-6" variant="outline" size="lg">
+                  Learn More
+                </Button>
+              </Link>
             </CardContent>
           </Card>
 
@@ -185,9 +198,11 @@ export default function HomePage() {
                 Technical infrastructure and innovation provided by One Water, bringing 
                 industry-leading expertise to support our mission.
               </p>
-              <Button asChild className="mt-6" variant="outline" size="lg">
-                <Link href="/technology">Our Technology</Link>
-              </Button>
+              <Link href="/technology">
+                <Button className="mt-6" variant="outline" size="lg">
+                  Our Technology
+                </Button>
+              </Link>
             </CardContent>
           </Card>
         </div>

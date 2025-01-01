@@ -68,7 +68,8 @@ export default function MicroLearning() {
     queryKey: ['/api/micro-learning', refreshKey],
     initialData: knowledgeBase,
     refetchInterval: 1000 * 60 * 60, // Refetch every hour
-    retry: 1,
+    refetchIntervalInBackground: true,
+    refetchOnWindowFocus: true,
     onError: (err) => {
       toast({
         title: 'Error loading content',
