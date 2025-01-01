@@ -1,12 +1,14 @@
 import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { useUser } from "@/hooks/use-user";
 import { Droplets, Building2, Sparkles, Book, Users, Brain, Bot, Layout, Briefcase, GraduationCap, Trophy } from "lucide-react";
 import DelphiProfile from '@/components/profile/DelphiProfile';
 import MicroLearning from '@/components/learning/MicroLearning';
 import { SkillRadar } from "@/components/profile/SkillRadar";
 import { motion } from "framer-motion";
+import { AvatarScroll } from '@/components/profile/AvatarScroll';
 import WaterNewsSection from '@/components/news/WaterNewsSection';
 
 // Animation variants...
@@ -31,7 +33,20 @@ const itemVariants = {
   }
 };
 
-const QuickActionCard = ({ icon: Icon, title, description, href }) => (
+interface QuickActionProps {
+  icon: React.ComponentType<{ className?: string }>;
+  title: string;
+  description: string;
+  href: string;
+}
+
+interface Skill {
+  subject: string;
+  level: number;
+  fullMark: number;
+}
+
+const QuickActionCard = ({ icon: Icon, title, description, href }: QuickActionProps) => (
   <Card className="group hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 cursor-pointer">
     <Link href={href}>
       <CardContent className="p-6">
